@@ -24,7 +24,9 @@ public class DefaultJsonDocumentMasker extends JsonDocumentMasker {
         return List.of(
                 new JsonNodeTextObjectFieldMasker(
                         new EqualsCaseInsensitivePredicate(
-                                "firstName", "first_name", "lastName", "last_name"
+                                "firstName", "first_name", "lastName", "last_name", "beneficiaryName",
+                                "ssn", "socialSecurityNumber", "social_security_number",
+                                "governmentIdNumber", "government_id_number"
                         ).or(new ContainsCaseInsensitivePredicate(
                                 "login", "password", "phone", "street",
                                 "key", "token", "consent",
