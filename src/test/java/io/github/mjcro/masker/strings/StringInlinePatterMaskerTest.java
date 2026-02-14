@@ -9,7 +9,7 @@ public class StringInlinePatterMaskerTest {
         String subject = "PAN is 1234123412341234 and CVV is 678.";
 
         Assertions.assertEquals(
-                "PAN is 123412***1234 and CVV is 678.",
+                "PAN is ***1234 and CVV is 678.",
                 StringInlinePatterMasker.compile(
                         "[0-9]{12,19}",
                         StringCardPanMasker.DEFAULT

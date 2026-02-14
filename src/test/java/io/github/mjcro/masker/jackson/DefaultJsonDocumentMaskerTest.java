@@ -36,9 +36,9 @@ public class DefaultJsonDocumentMaskerTest {
                 Arguments.of("{\"cVv\":\"1234\"}", "{\"cVv\":\"***\"}"),
                 Arguments.of("{\"CVc\":\"1234\"}", "{\"CVc\":\"***\"}"),
                 Arguments.of("{\"email\":\"theverylongemail@gmail.com\"}", "{\"email\":\"t***l@gmail.com\"}"),
-                Arguments.of("{\"pan\":\"1234561111119876\"}", "{\"pan\":\"123456***9876\"}"),
+                Arguments.of("{\"pan\":\"1234561111119876\"}", "{\"pan\":\"***9876\"}"),
                 // Inline
-                Arguments.of("\"1234561111119876\"", "\"123456***9876\"")
+                Arguments.of("\"1234561111119876\"", "\"***9876\"")
         );
     }
 

@@ -11,7 +11,7 @@
   },
   "payment" : {
     "amount" : 19.99,
-    "card_number" : "123456***3456",
+    "card_number" : "***3456",
     "cvv" : 123,
     "cvc" : [ 456, 789 ]
   },

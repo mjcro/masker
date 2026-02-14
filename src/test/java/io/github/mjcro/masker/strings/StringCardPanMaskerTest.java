@@ -12,9 +12,9 @@ public class StringCardPanMaskerTest {
         return Stream.of(
                 Arguments.of(null, null),
                 Arguments.of("", ""),
-                Arguments.of("123456***5678", "1234567812345678"),
-                Arguments.of("123456***5678", "1234 5678 1234 5678"),
-                Arguments.of("123456***5678", "1234-5678-1234-5678")
+                Arguments.of("***5678", "1234567812345678"),
+                Arguments.of("***5678", "1234 5678 1234 5678"),
+                Arguments.of("***5678", "1234-5678-1234-5678")
         );
     }
 
