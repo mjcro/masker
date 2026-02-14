@@ -50,7 +50,7 @@ public class JsonDocumentMasker implements Masker<JsonNode, JsonNode> {
             Iterator<Map.Entry<String, JsonNode>> fields = objectNode.fields();
             while (fields.hasNext()) {
                 Map.Entry<String, JsonNode> entry = fields.next();
-                JsonNode transformed = applyFieldMarkers(entry);
+                JsonNode transformed = applyFieldMaskers(entry);
                 if (transformed == entry.getValue()
                         && entry.getValue().isArray()
                         && !(entry.getValue().isEmpty())
@@ -65,7 +65,7 @@ public class JsonDocumentMasker implements Masker<JsonNode, JsonNode> {
                                 entry.getKey(),
                                 innerItem
                         );
-                        JsonNode innerTransformed = applyFieldMarkers(synthEntry);
+                        JsonNode innerTransformed = applyFieldMaskers(synthEntry);
                         if (innerTransformed != innerItem) {
                             arrayNode.set(i, innerTransformed);
                         }
@@ -106,7 +106,7 @@ public class JsonDocumentMasker implements Masker<JsonNode, JsonNode> {
         return node;
     }
 
-    private JsonNode applyFieldMarkers(Map.Entry<String, JsonNode> entry) throws Exception {
+    private JsonNode applyFieldMaskers(Map.Entry<String, JsonNode> entry) throws Exception {
         JsonNode transformed;
         for (Masker<Map.Entry<String, JsonNode>, JsonNode> m : fieldMaskers) {
             transformed = m.applyMasking(entry);
