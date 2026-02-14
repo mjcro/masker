@@ -15,5 +15,8 @@
     "cvv" : 123,
     "cvc" : [ 456, 789 ]
   },
+  "beneficiary" : {
+    "iban" : "UA12345678901234567890"
+  },
   "description" : "After months of hard work Clarkson's farm arrives at a make or break moment; harvest time. Off to a rocky start, Clarkson must find a vital piece of equipment and fit four days of work into 24 hours, to harvest hundreds of acres of crops."
 }

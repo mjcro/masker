@@ -11,18 +11,18 @@ import java.util.regex.Pattern;
 /**
  * Replaces inline values matched by Regex within string.
  */
-public class StringInlinePatterMasker implements Masker<CharSequence, String> {
+public class StringInlinePatternMasker implements Masker<CharSequence, String> {
     private final Pattern pattern;
     private final Masker<? super CharSequence, ? extends String> masker;
 
-    public static StringInlinePatterMasker compile(
+    public static StringInlinePatternMasker compile(
             @NonNull String regex,
             @NonNull Masker<? super CharSequence, ? extends String> masker
     ) {
-        return new StringInlinePatterMasker(Pattern.compile(regex), masker);
+        return new StringInlinePatternMasker(Pattern.compile(regex), masker);
     }
 
-    public StringInlinePatterMasker(
+    public StringInlinePatternMasker(
             @NonNull Pattern pattern,
             @NonNull Masker<? super CharSequence, ? extends String> masker
     ) {

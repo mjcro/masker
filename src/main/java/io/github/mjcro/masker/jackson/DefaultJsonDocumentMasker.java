@@ -5,6 +5,7 @@ import io.github.mjcro.masker.Masker;
 import io.github.mjcro.masker.strings.StringCardPanMasker;
 import io.github.mjcro.masker.strings.StringEmailMasker;
 import io.github.mjcro.masker.strings.StringFullMasker;
+import io.github.mjcro.masker.strings.StringIBANMasker;
 import io.github.mjcro.masker.strings.StringLongTruncationMasker;
 import io.github.mjcro.masker.strings.StringPatternPredicateMasker;
 import io.github.mjcro.masker.strings.StringSmartLengthMasker;
@@ -36,6 +37,12 @@ public class DefaultJsonDocumentMasker extends JsonDocumentMasker {
                                 "card", "cardNumber", "card_number", "pan"
                         ),
                         StringCardPanMasker.DEFAULT
+                ),
+                new JsonNodeTextObjectFieldMasker(
+                        new EqualsCaseInsensitivePredicate(
+                                "iban", "bank_account", "bankAccount"
+                        ),
+                        StringIBANMasker.DEFAULT
                 ),
                 new JsonNodeTextObjectFieldMasker(
                         new ContainsCaseInsensitivePredicate("email"),

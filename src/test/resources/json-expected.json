@@ -15,5 +15,8 @@
     "cvv" : 123,
     "cvc" : [ 456, 789 ]
   },
+  "beneficiary" : {
+    "iban" : "UA12***7890"
+  },
   "description" : "After months of hard work Clarkson's farm arrives at[...188...]s."
 }
