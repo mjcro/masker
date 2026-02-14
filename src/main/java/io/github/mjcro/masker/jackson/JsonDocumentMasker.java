@@ -17,11 +17,11 @@ import java.util.Objects;
 
 public class JsonDocumentMasker implements Masker<JsonNode, JsonNode> {
     private final List<Masker<Map.Entry<String, JsonNode>, JsonNode>> fieldMaskers;
-    private final List<Masker<CharSequence, String>> stringMaskers;
+    private final List<Masker<String, String>> stringMaskers;
 
     public JsonDocumentMasker(
             @NonNull List<Masker<Map.Entry<String, JsonNode>, JsonNode>> fieldMaskers,
-            @NonNull List<Masker<CharSequence, String>> stringMaskers
+            @NonNull List<Masker<String, String>> stringMaskers
     ) {
         this.fieldMaskers = Objects.requireNonNull(fieldMaskers, "fieldMaskers");
         this.stringMaskers = Objects.requireNonNull(stringMaskers, "stringMaskers");
@@ -95,7 +95,7 @@ public class JsonDocumentMasker implements Masker<JsonNode, JsonNode> {
         } else if (node.isTextual()) {
             String original = node.asText();
             String replacement;
-            for (Masker<CharSequence, String> m : stringMaskers) {
+            for (Masker<String, String> m : stringMaskers) {
                 replacement = m.applyMasking(original);
                 if (!(Objects.equals(original, replacement))) {
                     return new TextNode(replacement);

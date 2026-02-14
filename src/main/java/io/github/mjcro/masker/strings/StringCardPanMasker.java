@@ -9,7 +9,7 @@ import java.util.Objects;
 /**
  * Masks credit card number (PAN) leaving only 4 last digits.
  */
-public class StringCardPanMasker implements Masker<CharSequence, String> {
+public class StringCardPanMasker implements Masker<String, String> {
     public static final StringCardPanMasker DEFAULT = new StringCardPanMasker(StringSmartLengthMasker.DEFAULT);
 
     private final StringSmartLengthMasker masker;
@@ -19,17 +19,17 @@ public class StringCardPanMasker implements Masker<CharSequence, String> {
     }
 
     @Override
-    public @Nullable String applyMasking(@Nullable CharSequence value) {
-        if (value == null) {
-            return masker.applyMasking(null);
+    public @Nullable String applyMasking(@Nullable String value) {
+        if (value == null || value.isBlank()) {
+            return masker.applyMasking(value);
         }
 
-        String s = value.toString().replaceAll("[^0-9]", "").strip();
-        if (s.isBlank() || s.length() < 12 || s.length() > 19) {
-            return masker.applyMasking(s);
+        value = value.replaceAll("[^0-9]", "").strip();
+        if (value.length() < 12 || value.length() > 19) {
+            return masker.applyMasking(value);
         }
 
         // Returning LAST4
-        return masker.getMask() + s.substring(s.length() - 4);
+        return masker.getMask() + value.substring(value.length() - 4);
     }
 }

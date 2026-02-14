@@ -7,7 +7,7 @@ import org.jspecify.annotations.Nullable;
  * Truncates long strings with length exceeding threshold, leaving prefix,
  * suffix and adding information about skipped characters
  */
-public class StringLongTruncationMasker implements Masker<CharSequence, String> {
+public class StringLongTruncationMasker implements Masker<String, String> {
     public static final StringLongTruncationMasker DEFAULT = new StringLongTruncationMasker(256);
     private final int threshold;
 
@@ -19,18 +19,17 @@ public class StringLongTruncationMasker implements Masker<CharSequence, String> 
     }
 
     @Override
-    public @Nullable String applyMasking(@Nullable CharSequence value) {
+    public @Nullable String applyMasking(@Nullable String value) {
         if (value == null) {
             return null;
         } else if (value.length() <= threshold) {
-            return value.toString();
+            return value;
         }
 
-        String s = value.toString();
-        return s.substring(0, threshold - 12)
+        return value.substring(0, threshold - 12)
                 + "[..."
                 + (value.length() - threshold + 14)
                 + "...]"
-                + s.substring(value.length() - 2);
+                + value.substring(value.length() - 2);
     }
 }

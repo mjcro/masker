@@ -6,7 +6,7 @@ import org.jspecify.annotations.Nullable;
 
 import java.util.Objects;
 
-public class StringEmailMasker implements Masker<CharSequence, String> {
+public class StringEmailMasker implements Masker<String, String> {
     public static final StringEmailMasker DEFAULT = new StringEmailMasker(StringSmartLengthMasker.DEFAULT);
 
     private final StringSmartLengthMasker masker;
@@ -16,13 +16,14 @@ public class StringEmailMasker implements Masker<CharSequence, String> {
     }
 
     @Override
-    public @Nullable String applyMasking(@Nullable CharSequence value) {
-        if (value == null || value.length() < 4) {
+    public @Nullable String applyMasking(@Nullable String value) {
+        if (value == null || value.isBlank() || value.length() < 4) {
             return masker.applyMasking(value);
         }
 
-        String s = value.toString();
-        int index = s.indexOf("@");
-        return masker.applyMasking(s.substring(0, index)) + s.substring(index);
+        int index = value.indexOf("@");
+        return index < 2
+                ? masker.applyMasking(value)
+                : masker.applyMasking(value.substring(0, index)) + value.substring(index);
     }
 }

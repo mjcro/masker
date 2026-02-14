@@ -9,7 +9,7 @@ import java.util.Objects;
 /**
  * Masks string, leaving short unchanged prefix and suffix for long strings.
  */
-public class StringSmartLengthMasker implements Masker<CharSequence, String> {
+public class StringSmartLengthMasker implements Masker<String, String> {
     public static final StringSmartLengthMasker DEFAULT = new StringSmartLengthMasker(StringFullMasker.DEFAULT);
     private final StringFullMasker fullMasker;
 
@@ -22,21 +22,20 @@ public class StringSmartLengthMasker implements Masker<CharSequence, String> {
     }
 
     @Override
-    public @Nullable String applyMasking(@Nullable CharSequence value) {
+    public @Nullable String applyMasking(@Nullable String value) {
         if (value == null || value.length() < 4) {
             return fullMasker.applyMasking(value);
         }
-        String s = value.toString();
-        if (s.isBlank()) {
-            return fullMasker.applyMasking(s);
-        } else if (s.length() < 10) {
-            return s.charAt(0) + fullMasker.getMask();
-        } else if (s.length() < 20) {
-            return s.charAt(0) + fullMasker.getMask() + s.charAt(s.length() - 1);
-        } else if (s.length() < 40) {
-            return s.substring(0, 2) + fullMasker.getMask() + s.charAt(s.length() - 1);
+        if (value.isBlank()) {
+            return fullMasker.applyMasking(value);
+        } else if (value.length() < 10) {
+            return value.charAt(0) + fullMasker.getMask();
+        } else if (value.length() < 20) {
+            return value.charAt(0) + fullMasker.getMask() + value.charAt(value.length() - 1);
+        } else if (value.length() < 40) {
+            return value.substring(0, 2) + fullMasker.getMask() + value.charAt(value.length() - 1);
         } else {
-            return s.substring(0, 4) + fullMasker.getMask() + s.charAt(s.length() - 1);
+            return value.substring(0, 4) + fullMasker.getMask() + value.charAt(value.length() - 1);
         }
     }
 }

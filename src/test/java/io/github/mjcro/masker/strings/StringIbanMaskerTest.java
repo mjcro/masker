@@ -20,7 +20,7 @@ public class StringIbanMaskerTest {
 
     @ParameterizedTest
     @MethodSource("dataProvider")
-    void testMasking(String expected, CharSequence given) {
+    void testMasking(String expected, String given) {
         Assertions.assertEquals(expected, StringIbanMasker.DEFAULT.applyMasking(given));
     }
 

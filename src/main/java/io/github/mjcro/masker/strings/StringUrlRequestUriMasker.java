@@ -9,7 +9,7 @@ import java.util.Objects;
 /**
  * Masker that hides request URI part of given URL.
  */
-public class StringUrlRequestUriMasker implements Masker<CharSequence, String> {
+public class StringUrlRequestUriMasker implements Masker<String, String> {
     public static final StringUrlRequestUriMasker DEFAULT = new StringUrlRequestUriMasker(
             StringSmartLengthMasker.DEFAULT
     );
@@ -21,19 +21,18 @@ public class StringUrlRequestUriMasker implements Masker<CharSequence, String> {
     }
 
     @Override
-    public @Nullable String applyMasking(@Nullable CharSequence value) {
-        if (value == null) {
-            return null;
+    public @Nullable String applyMasking(@Nullable String value) {
+        if (value == null || value.isBlank()) {
+            return masker.applyMasking(value);
         }
 
-        String s = value.toString();
-        if (s.isBlank() || !(s.startsWith("http://") || s.startsWith("https://"))) {
-            return masker.applyMasking(s);
+        if (!value.startsWith("http://") && !value.startsWith("https://")) {
+            return masker.applyMasking(value);
         }
 
-        int index = s.indexOf('/', 9);
-        return index > 0 && index < s.length() - 1
-                ? s.substring(0, index + 1) + masker.getMask()
-                : s;
+        int index = value.indexOf('/', 9);
+        return index > 0 && index < value.length() - 1
+                ? value.substring(0, index + 1) + masker.getMask()
+                : value;
     }
 }

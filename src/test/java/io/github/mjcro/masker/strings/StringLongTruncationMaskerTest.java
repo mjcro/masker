@@ -23,7 +23,7 @@ public class StringLongTruncationMaskerTest {
 
     @ParameterizedTest
     @MethodSource("dataProvider")
-    void testMasking(String expected, CharSequence given) {
+    void testMasking(String expected, String given) {
         Assertions.assertEquals(expected, new StringLongTruncationMasker(32).applyMasking(given));
     }
 }

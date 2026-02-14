@@ -29,7 +29,7 @@ public class StringSmartLengthMaskerTest {
 
     @ParameterizedTest
     @MethodSource("dataProvider")
-    void testMasking(String expected, CharSequence given) {
+    void testMasking(String expected, String given) {
         Assertions.assertEquals(expected, StringSmartLengthMasker.DEFAULT.applyMasking(given));
     }
 }

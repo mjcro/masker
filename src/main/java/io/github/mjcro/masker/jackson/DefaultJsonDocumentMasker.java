@@ -59,7 +59,7 @@ public class DefaultJsonDocumentMasker extends JsonDocumentMasker {
         );
     }
 
-    public static List<Masker<CharSequence, String>> getStringMaskers() {
+    public static List<Masker<String, String>> getStringMaskers() {
         return List.of(
                 StringPatternPredicateMasker.compile(
                         "^[0-9]{12,19}$",

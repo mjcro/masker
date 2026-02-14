@@ -10,7 +10,7 @@ import java.util.regex.Pattern;
 /**
  * Masks IBAN leaving only 4 first and last digits.
  */
-public class StringIbanMasker implements Masker<CharSequence, String> {
+public class StringIbanMasker implements Masker<String, String> {
     public static final StringIbanMasker DEFAULT = new StringIbanMasker(StringSmartLengthMasker.DEFAULT);
     private static final Pattern inlinePattern = Pattern.compile("\\b[A-Z]{2}[0-9]{2}[A-Z0-9]{11,30}\\b");
 
@@ -25,12 +25,12 @@ public class StringIbanMasker implements Masker<CharSequence, String> {
     }
 
     @Override
-    public @Nullable String applyMasking(@Nullable CharSequence value) {
-        if (value == null) {
-            return masker.applyMasking(null);
+    public @Nullable String applyMasking(@Nullable String value) {
+        if (value == null || value.isBlank()) {
+            return masker.applyMasking(value);
         }
 
-        String s = value.toString().replaceAll("[ -]", "").strip();
+        String s = value.replaceAll("[ -]", "").strip();
         if (s.isBlank() || s.length() < 11 || s.length() > 40) {
             return masker.applyMasking(s);
         }

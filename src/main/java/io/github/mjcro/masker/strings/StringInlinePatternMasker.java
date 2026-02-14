@@ -11,29 +11,29 @@ import java.util.regex.Pattern;
 /**
  * Replaces inline values matched by Regex within string.
  */
-public class StringInlinePatternMasker implements Masker<CharSequence, String> {
+public class StringInlinePatternMasker implements Masker<String, String> {
     private final Pattern pattern;
-    private final Masker<? super CharSequence, ? extends String> masker;
+    private final Masker<String, String> masker;
 
     public static StringInlinePatternMasker compile(
             @NonNull String regex,
-            @NonNull Masker<? super CharSequence, ? extends String> masker
+            @NonNull Masker<String, String> masker
     ) {
         return new StringInlinePatternMasker(Pattern.compile(regex), masker);
     }
 
     public StringInlinePatternMasker(
             @NonNull Pattern pattern,
-            @NonNull Masker<? super CharSequence, ? extends String> masker
+            @NonNull Masker<String, String> masker
     ) {
         this.pattern = Objects.requireNonNull(pattern, "pattern");
         this.masker = Objects.requireNonNull(masker, "masker");
     }
 
     @Override
-    public @Nullable String applyMasking(@Nullable CharSequence value) throws Exception {
-        if (value == null) {
-            return null;
+    public @Nullable String applyMasking(@Nullable String value) throws Exception {
+        if (value == null || value.isBlank()) {
+            return value;
         }
 
         Matcher matcher = pattern.matcher(value);

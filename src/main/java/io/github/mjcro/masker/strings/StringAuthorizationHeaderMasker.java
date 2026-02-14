@@ -9,7 +9,7 @@ import java.util.Objects;
 /**
  * Masker for HTTP authorization headers.
  */
-public class StringAuthorizationHeaderMasker implements Masker<CharSequence, String> {
+public class StringAuthorizationHeaderMasker implements Masker<String, String> {
     public static final StringAuthorizationHeaderMasker DEFAULT = new StringAuthorizationHeaderMasker(
             StringSmartLengthMasker.DEFAULT
     );
@@ -21,18 +21,17 @@ public class StringAuthorizationHeaderMasker implements Masker<CharSequence, Str
     }
 
     @Override
-    public String applyMasking(@Nullable CharSequence data) throws Exception {
-        if (data == null) {
-            return null;
+    public String applyMasking(@Nullable String value) throws Exception {
+        if (value == null || value.isBlank()) {
+            return masker.applyMasking(value);
         }
 
-        String s = data.toString();
-        int index = s.indexOf(' ');
+        int index = value.indexOf(' ');
 
-        if (s.length() < 10 || index < 2 || index > s.length() - 5) {
-            return masker.applyMasking(data);
+        if (value.length() < 10 || index < 2 || index > value.length() - 5) {
+            return masker.applyMasking(value);
         }
 
-        return s.substring(0, index + 4) + masker.getMask();
+        return value.substring(0, index + 4) + masker.getMask();
     }
 }

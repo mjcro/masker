@@ -12,11 +12,11 @@ import java.util.function.Predicate;
 
 public class JsonNodeTextObjectFieldMasker implements Masker<Map.Entry<String, JsonNode>, JsonNode> {
     private final Predicate<? super String> namePredicate;
-    private final Masker<CharSequence, String> masker;
+    private final Masker<String, String> masker;
 
     public JsonNodeTextObjectFieldMasker(
             @NonNull Predicate<? super String> namePredicate,
-            @NonNull Masker<CharSequence, String> masker
+            @NonNull Masker<String, String> masker
     ) {
         this.namePredicate = Objects.requireNonNull(namePredicate, "namePredicate");
         this.masker = Objects.requireNonNull(masker, "masker");

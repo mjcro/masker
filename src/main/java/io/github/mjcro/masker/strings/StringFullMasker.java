@@ -11,7 +11,7 @@ import java.util.Objects;
  * - Null values are left as-is
  * - Empty strings are left as-is
  */
-public class StringFullMasker implements Masker<CharSequence, String> {
+public class StringFullMasker implements Masker<String, String> {
     public static final String MASK = "***";
     public static final StringFullMasker DEFAULT = new StringFullMasker(MASK);
     private final String mask;
@@ -25,16 +25,13 @@ public class StringFullMasker implements Masker<CharSequence, String> {
     }
 
     @Override
-    public @Nullable String applyMasking(@Nullable CharSequence value) {
+    public @Nullable String applyMasking(@Nullable String value) {
         if (value == null) {
             return null;
-        } else if (value.length() == 0) {
-            return "";
+        } else if (value.isBlank()) {
+            return value;
         }
-        String s = value.toString();
 
-        return s.isBlank()
-                ? s
-                : getMask();
+        return getMask();
     }
 }
