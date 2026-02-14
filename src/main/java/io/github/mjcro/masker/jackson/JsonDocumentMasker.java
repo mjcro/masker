@@ -1,0 +1,119 @@
+package io.github.mjcro.masker.jackson;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.fasterxml.jackson.databind.node.TextNode;
+import io.github.mjcro.masker.Masker;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
+
+import java.util.AbstractMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+
+public class JsonDocumentMasker implements Masker<JsonNode, JsonNode> {
+    private final List<Masker<Map.Entry<String, JsonNode>, JsonNode>> fieldMaskers;
+    private final List<Masker<CharSequence, String>> stringMaskers;
+
+    public JsonDocumentMasker(
+            @NonNull List<Masker<Map.Entry<String, JsonNode>, JsonNode>> fieldMaskers,
+            @NonNull List<Masker<CharSequence, String>> stringMaskers
+    ) {
+        this.fieldMaskers = Objects.requireNonNull(fieldMaskers, "fieldMaskers");
+        this.stringMaskers = Objects.requireNonNull(stringMaskers, "stringMaskers");
+    }
+
+    @Override
+    public @Nullable JsonNode applyMasking(@Nullable JsonNode data) throws Exception {
+        return transformRecursive(data);
+    }
+
+    public @NonNull String maskJsonString(@NonNull String json) throws Exception {
+        return applyMasking(new ObjectMapper().readTree(json)).toString();
+    }
+
+    public @NonNull String maskJsonPrettyString(@NonNull String json) throws Exception {
+        return applyMasking(new ObjectMapper().readTree(json)).toPrettyString();
+    }
+
+    private @Nullable JsonNode transformRecursive(@Nullable JsonNode node) throws Exception {
+        if (node == null) {
+            return null;
+        }
+
+        if (node.isObject()) {
+            ObjectNode objectNode = (ObjectNode) node;
+            Iterator<Map.Entry<String, JsonNode>> fields = objectNode.fields();
+            while (fields.hasNext()) {
+                Map.Entry<String, JsonNode> entry = fields.next();
+                JsonNode transformed = applyFieldMarkers(entry);
+                if (transformed == entry.getValue()
+                        && entry.getValue().isArray()
+                        && !(entry.getValue().isEmpty())
+                        && !(entry.getValue().get(0).isObject() || entry.getValue().get(0).isArray())
+                ) {
+                    // Special treatment for array values that weren't transformed yet
+                    // and are no objects or arrays
+                    ArrayNode arrayNode = (ArrayNode) entry.getValue();
+                    for (int i = 0; i < arrayNode.size(); i++) {
+                        JsonNode innerItem = arrayNode.get(i);
+                        AbstractMap.SimpleEntry<String, JsonNode> synthEntry = new AbstractMap.SimpleEntry<>(
+                                entry.getKey(),
+                                innerItem
+                        );
+                        JsonNode innerTransformed = applyFieldMarkers(synthEntry);
+                        if (innerTransformed != innerItem) {
+                            arrayNode.set(i, innerTransformed);
+                        }
+                    }
+                }
+
+                if (transformed != entry.getValue()) {
+                    // Transformation was applied, no further processing required
+                    objectNode.set(entry.getKey(), transformed);
+                } else {
+                    // Recursive transformation
+                    transformed = transformRecursive(entry.getValue());
+                    if (transformed != entry.getValue()) {
+                        objectNode.set(entry.getKey(), transformed);
+                    }
+                }
+            }
+        } else if (node.isArray()) {
+            ArrayNode arrayNode = (ArrayNode) node;
+            for (int i = 0; i < arrayNode.size(); i++) {
+                JsonNode item = arrayNode.get(i);
+                JsonNode transformed = transformRecursive(item);
+                if (transformed != item) {
+                    arrayNode.set(i, transformed);
+                }
+            }
+        } else if (node.isTextual()) {
+            String original = node.asText();
+            String replacement;
+            for (Masker<CharSequence, String> m : stringMaskers) {
+                replacement = m.applyMasking(original);
+                if (!(Objects.equals(original, replacement))) {
+                    return new TextNode(replacement);
+                }
+            }
+        }
+
+        return node;
+    }
+
+    private JsonNode applyFieldMarkers(Map.Entry<String, JsonNode> entry) throws Exception {
+        JsonNode transformed;
+        for (Masker<Map.Entry<String, JsonNode>, JsonNode> m : fieldMaskers) {
+            transformed = m.applyMasking(entry);
+            if (transformed != entry.getValue()) {
+                return transformed;
+            }
+        }
+        return entry.getValue();
+    }
+}

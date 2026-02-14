@@ -1,0 +1,19 @@
+{
+  "id" : 12345,
+  "token" : "1234567890",
+  "consent" : "abcdefghijklm",
+  "user" : {
+    "login" : "grandfarm12",
+    "first_name" : "Jeremy",
+    "last_name" : "Clarkson-Hammond-May",
+    "phone" : "+380631111111",
+    "email" : "jeremy@clarkson.may"
+  },
+  "payment" : {
+    "amount" : 19.99,
+    "card_number" : "1234 5678 9012 3456",
+    "cvv" : 123,
+    "cvc" : [ 456, 789 ]
+  },
+  "description" : "After months of hard work Clarkson's farm arrives at a make or break moment; harvest time. Off to a rocky start, Clarkson must find a vital piece of equipment and fit four days of work into 24 hours, to harvest hundreds of acres of crops."
+}
