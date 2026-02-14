@@ -8,6 +8,9 @@ import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+/**
+ * Replaces inline values matched by Regex within string.
+ */
 public class StringInlinePatterMasker implements Masker<CharSequence, String> {
     private final Pattern pattern;
     private final Masker<? super CharSequence, ? extends String> masker;
@@ -33,14 +36,15 @@ public class StringInlinePatterMasker implements Masker<CharSequence, String> {
             return null;
         }
 
-        String s = value.toString();
         Matcher matcher = pattern.matcher(value);
+        StringBuilder sb = new StringBuilder(value.length());
         while (matcher.find()) {
-            String substring = matcher.group(1);
-            String replacement = masker.applyMasking(substring);
-            s = s.replaceAll(Pattern.quote(substring), replacement == null ? "" : replacement);
+            String match = matcher.group(0);
+            String replacement = masker.applyMasking(match);
+            matcher.appendReplacement(sb, replacement == null ? match : replacement);
         }
+        matcher.appendTail(sb);
 
-        return s;
+        return sb.toString();
     }
 }
