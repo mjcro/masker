@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?><root>
+    <session_metadata>
+        <id>77b9-441c-8291</id>
+        <auth_token>eyJh***c</auth_token>
+    </session_metadata>
+
+    <financial_transactions>
+        <transaction id="TXN-9901" type="CARD_PAYMENT">
+            <payment_instrument number="***4444" cvv="***" expiry="12/28" brand="VISA"></payment_instrument>
+            <amount currency="USD">299.99</amount>
+        </transaction>
+
+        <transaction id="TXN-9902" type="WIRE_TRANSFER">
+            <sender>
+                <name>Jane Doe</name>
+                <ssn>1***9</ssn>
+                <contact>
+                    <email>j***@example.com</email>
+                    <phone>***88</phone>
+                </contact>
+                <account_info>
+                    <iban>DE21***6789</iban>
+                    <bic>MARKDEFFXXX</bic>
+                </account_info>
+            </sender>
+            <receiver>
+                <name>Global Services Inc</name>
+                <routing_number>021000021</routing_number>
+                <account_number>9988776655</account_number>
+            </receiver>
+        </transaction>
+    </financial_transactions>
+
+    <user_security>
+        <user id="user_882">
+            <username>jdoe_admin</username>
+            <password_hash>$2a$***3</password_hash>
+            <security_questions>
+                <question answer="Bluebell High" id="1">What was your first school?</question>
+            </security_questions>
+            <crypto_wallet>
+                <address>0x71C7656EC7ab88b098defB751B7401B5f6d8976F</address>
+                <recovery_phrase>apple banana cherry dog elephant frog grape horse ic[...24...]on</recovery_phrase>
+            </crypto_wallet>
+        </user>
+    </user_security>
+</root>
