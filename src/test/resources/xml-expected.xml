@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8" standalone="no"?><root>
+<?xml version='1.0' encoding='UTF-8'?><root>
     <session_metadata>
         <id>77b9-441c-8291</id>
         <auth_token>eyJh***c</auth_token>
@@ -6,7 +6,7 @@
 
     <financial_transactions>
         <transaction id="TXN-9901" type="CARD_PAYMENT">
-            <payment_instrument number="***4444" cvv="***" expiry="12/28" brand="VISA"></payment_instrument>
+            <payment_instrument number="***4444" cvv="***" expiry="12/28"/>
             <amount currency="USD">299.99</amount>
         </transaction>
 
@@ -36,7 +36,7 @@
             <username>jdoe_admin</username>
             <password_hash>$2a$***3</password_hash>
             <security_questions>
-                <question answer="Bluebell High" id="1">What was your first school?</question>
+                <question answer="Bluebell High">What was your first school?</question>
             </security_questions>
             <crypto_wallet>
                 <address>0x71C7656EC7ab88b098defB751B7401B5f6d8976F</address>
