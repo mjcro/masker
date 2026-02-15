@@ -1,5 +1,6 @@
 package io.github.mjcro.masker.jackson;
 
+import io.github.mjcro.masker.rules.DefaultObjectFieldsRulebook;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -10,7 +11,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.stream.Stream;
 
-public class DefaultJsonDocumentMaskerTest {
+public class JsonNodeDocumentMaskerTest {
     @Test
     void testMasking() throws Exception {
         String given = Files.readString(Path.of(getClass().getClassLoader().getResource("json-given.json").toURI()));
@@ -18,7 +19,7 @@ public class DefaultJsonDocumentMaskerTest {
 
         Assertions.assertEquals(
                 expected,
-                new DefaultJsonDocumentMasker().maskJsonPrettyString(given)
+                JsonNodeDocumentMasker.usingRulebook(new DefaultObjectFieldsRulebook()).maskJsonPrettyString(given)
         );
     }
 
@@ -48,7 +49,7 @@ public class DefaultJsonDocumentMaskerTest {
     public void testMasking(final String given, final String expected) throws Exception {
         Assertions.assertEquals(
                 expected,
-                new DefaultJsonDocumentMasker().maskJsonString(given)
+                JsonNodeDocumentMasker.usingRulebook(new DefaultObjectFieldsRulebook()).maskJsonString(given)
         );
     }
 }

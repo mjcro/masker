@@ -1,11 +1,13 @@
 package io.github.mjcro.masker.headers;
 
 import io.github.mjcro.masker.Masker;
+import io.github.mjcro.masker.rules.Rulebook;
 import io.github.mjcro.masker.util.EqualsCaseInsensitivePredicate;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -14,6 +16,16 @@ import java.util.stream.Collectors;
 public class HeadersPerNameMasker implements Masker<Map<String, List<String>>, Map<String, List<String>>> {
     private final Map<String, Masker<? super String, ? extends String>> rules;
     private final Masker<? super String, ? extends String> defaultMasker;
+
+    public static HeadersPerNameMasker usingRulebook(@NonNull Rulebook rulebook) {
+        HashMap<String, Masker<? super String, ? extends String>> nameRules = new HashMap<>();
+        for (Map.Entry<String[], Masker<String, String>> e : rulebook.getNameEqualsMaskers()) {
+            for (String name : e.getKey()) {
+                nameRules.put(name, e.getValue());
+            }
+        }
+        return new HeadersPerNameMasker(nameRules, rulebook.getDefaultMasker());
+    }
 
     public HeadersPerNameMasker(
             @NonNull Map<String, Masker<? super String, ? extends String>> rules,

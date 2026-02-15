@@ -6,25 +6,49 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.node.TextNode;
 import io.github.mjcro.masker.Masker;
+import io.github.mjcro.masker.NameMatchingMaskerDecorator;
+import io.github.mjcro.masker.rules.Rulebook;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 
 import java.util.AbstractMap;
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-public class JsonDocumentMasker implements Masker<JsonNode, JsonNode> {
+public class JsonNodeDocumentMasker implements Masker<JsonNode, JsonNode> {
     private final List<Masker<Map.Entry<String, JsonNode>, JsonNode>> fieldMaskers;
-    private final List<Masker<String, String>> stringMaskers;
+    private final List<Masker<String, String>> inlineMaskers;
 
-    public JsonDocumentMasker(
+    public static JsonNodeDocumentMasker usingRulebook(@NonNull Rulebook rulebook) {
+        ArrayList<Masker<Map.Entry<String, JsonNode>, JsonNode>> fieldMaskers = new ArrayList<>();
+        for (Map.Entry<String[], Masker<String, String>> e : rulebook.getNameEqualsMaskers()) {
+            fieldMaskers.add(
+                    NameMatchingMaskerDecorator.equalsCaseInsensitive(
+                            new JsonNodeTextualMaskerDecorator(e.getValue()),
+                            e.getKey()
+                    )
+            );
+        }
+        for (Map.Entry<String[], Masker<String, String>> e : rulebook.getNameContainsMaskers()) {
+            fieldMaskers.add(
+                    NameMatchingMaskerDecorator.containsCaseInsensitive(
+                            new JsonNodeTextualMaskerDecorator(e.getValue()),
+                            e.getKey()
+                    )
+            );
+        }
+        return new JsonNodeDocumentMasker(fieldMaskers, rulebook.getInlineMaskers());
+    }
+
+    public JsonNodeDocumentMasker(
             @NonNull List<Masker<Map.Entry<String, JsonNode>, JsonNode>> fieldMaskers,
-            @NonNull List<Masker<String, String>> stringMaskers
+            @NonNull List<Masker<String, String>> inlineMaskers
     ) {
         this.fieldMaskers = Objects.requireNonNull(fieldMaskers, "fieldMaskers");
-        this.stringMaskers = Objects.requireNonNull(stringMaskers, "stringMaskers");
+        this.inlineMaskers = Objects.requireNonNull(inlineMaskers, "inlineMaskers");
     }
 
     @Override
@@ -95,7 +119,7 @@ public class JsonDocumentMasker implements Masker<JsonNode, JsonNode> {
         } else if (node.isTextual()) {
             String original = node.asText();
             String replacement;
-            for (Masker<String, String> m : stringMaskers) {
+            for (Masker<String, String> m : inlineMaskers) {
                 replacement = m.applyMasking(original);
                 if (!(Objects.equals(original, replacement))) {
                     return new TextNode(replacement);

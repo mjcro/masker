@@ -1,12 +1,13 @@
 package io.github.mjcro.masker.headers;
 
+import io.github.mjcro.masker.rules.DefaultHttpHeadersRulebook;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 import java.util.LinkedHashMap;
 import java.util.List;
 
-public class DefaultHeadersMaskerTest {
+public class HeadersPerNameMaskerTest {
     @Test
     void testHeadersMasking() throws Exception {
         LinkedHashMap<String, List<String>> given = new LinkedHashMap<>();
@@ -25,7 +26,7 @@ public class DefaultHeadersMaskerTest {
 
         Assertions.assertEquals(
                 expected,
-                new DefaultHeadersMasker().applyMasking(given)
+                HeadersPerNameMasker.usingRulebook(new DefaultHttpHeadersRulebook()).applyMasking(given)
         );
     }
 }
