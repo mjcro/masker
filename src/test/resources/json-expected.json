@@ -13,7 +13,8 @@
     "amount" : 19.99,
     "card_number" : "***3456",
     "cvv" : "***",
-    "cvc" : [ "***", "***" ]
+    "cvc" : [ "***", "***" ],
+    "mainsecret" : "f***"
   },
   "beneficiary" : {
     "iban" : "UA12***7890"

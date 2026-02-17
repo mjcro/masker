@@ -57,7 +57,7 @@ public class DefaultObjectFieldsRulebook implements Rulebook {
                         StringSmartLengthMasker.DEFAULT,
                         "login", "password", "street",
                         "key", "token", "consent",
-                        "signature"
+                        "signature", "secret"
                 )
         );
     }
