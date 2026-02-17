@@ -12,8 +12,8 @@
   "payment" : {
     "amount" : 19.99,
     "card_number" : "***3456",
-    "cvv" : 123,
-    "cvc" : [ 456, 789 ]
+    "cvv" : "***",
+    "cvc" : [ "***", "***" ]
   },
   "beneficiary" : {
     "iban" : "UA12***7890"
