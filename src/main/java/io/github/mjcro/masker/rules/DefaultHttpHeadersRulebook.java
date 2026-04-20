@@ -29,7 +29,7 @@ public class DefaultHttpHeadersRulebook implements Rulebook {
                         StringSmartLengthMasker.DEFAULT,
                         "proxy-authorization", "cookie", "set-cookie",
                         "token", "signature", "consent", "x-token", "x-auth-token", "x-api-key", "x-key",
-                        "www-authenticate", "x-itc-token"
+                        "www-authenticate", "x-itc-token", "consent-token", "consenttoken"
                 )
         );
     }
