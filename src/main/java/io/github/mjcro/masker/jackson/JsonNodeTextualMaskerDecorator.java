@@ -1,6 +1,7 @@
 package io.github.mjcro.masker.jackson;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.NullNode;
 import com.fasterxml.jackson.databind.node.TextNode;
 import io.github.mjcro.masker.Masker;
 import org.jspecify.annotations.NonNull;
@@ -21,9 +22,18 @@ public class JsonNodeTextualMaskerDecorator implements Masker<JsonNode, JsonNode
             return null;
         }
 
-        if (value.isTextual()) {
-            return new TextNode(masker.applyMasking(value.textValue()));
+        if (!value.isTextual()) {
+            return value;
         }
-        return value;
+
+        final String original = value.textValue();
+        final String masked = masker.applyMasking(original);
+        if (masked == original) {
+            return value;
+        }
+        if (masked == null) {
+            return NullNode.getInstance();
+        }
+        return new TextNode(masked);
     }
 }

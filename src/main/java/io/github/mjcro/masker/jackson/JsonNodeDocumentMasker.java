@@ -3,6 +3,7 @@ package io.github.mjcro.masker.jackson;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.NullNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.node.TextNode;
 import io.github.mjcro.masker.Masker;
@@ -18,7 +19,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
+/** Masks a Jackson {@link JsonNode} tree in place; callers who need the original must pass a deep copy. */
 public class JsonNodeDocumentMasker implements Masker<JsonNode, JsonNode> {
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+
     private final List<Masker<Map.Entry<String, JsonNode>, JsonNode>> fieldMaskers;
     private final List<Masker<String, String>> inlineMaskers;
 
@@ -51,17 +55,18 @@ public class JsonNodeDocumentMasker implements Masker<JsonNode, JsonNode> {
         this.inlineMaskers = Objects.requireNonNull(inlineMaskers, "inlineMaskers");
     }
 
+    /** Mutates {@code data} in place; the returned node is the same reference when non-null. */
     @Override
     public @Nullable JsonNode applyMasking(@Nullable JsonNode data) throws Exception {
         return transformRecursive(data, null);
     }
 
     public @NonNull String maskJsonString(@NonNull String json) throws Exception {
-        return applyMasking(new ObjectMapper().readTree(json)).toString();
+        return applyMasking(OBJECT_MAPPER.readTree(json)).toString();
     }
 
     public @NonNull String maskJsonPrettyString(@NonNull String json) throws Exception {
-        return applyMasking(new ObjectMapper().readTree(json)).toPrettyString();
+        return applyMasking(OBJECT_MAPPER.readTree(json)).toPrettyString();
     }
 
     private @Nullable JsonNode transformRecursive(@Nullable JsonNode node, @Nullable String parentName) throws Exception {
@@ -75,14 +80,20 @@ public class JsonNodeDocumentMasker implements Masker<JsonNode, JsonNode> {
             while (fields.hasNext()) {
                 Map.Entry<String, JsonNode> entry = fields.next();
                 JsonNode transformed = applyFieldMaskers(entry, parentName);
-                if (transformed == entry.getValue()
-                        && entry.getValue().isArray()
+                if (transformed != entry.getValue()) {
+                    // Transformation was applied, no further processing required
+                    objectNode.set(entry.getKey(), transformed);
+                    continue;
+                }
+
+                if (entry.getValue().isArray()
                         && !(entry.getValue().isEmpty())
                         && !(entry.getValue().get(0).isObject() || entry.getValue().get(0).isArray())
                 ) {
                     // Special treatment for array values that weren't transformed yet
                     // and are no objects or arrays
                     ArrayNode arrayNode = (ArrayNode) entry.getValue();
+                    boolean anyInnerTransformed = false;
                     for (int i = 0; i < arrayNode.size(); i++) {
                         JsonNode innerItem = arrayNode.get(i);
                         AbstractMap.SimpleEntry<String, JsonNode> synthEntry = new AbstractMap.SimpleEntry<>(
@@ -92,19 +103,19 @@ public class JsonNodeDocumentMasker implements Masker<JsonNode, JsonNode> {
                         JsonNode innerTransformed = applyFieldMaskers(synthEntry, parentName);
                         if (innerTransformed != innerItem) {
                             arrayNode.set(i, innerTransformed);
+                            anyInnerTransformed = true;
                         }
+                    }
+                    // Skip fallback recursion — inline maskers would re-mask already-masked values.
+                    if (anyInnerTransformed) {
+                        continue;
                     }
                 }
 
+                // Recursive transformation
+                transformed = transformRecursive(entry.getValue(), entry.getKey());
                 if (transformed != entry.getValue()) {
-                    // Transformation was applied, no further processing required
                     objectNode.set(entry.getKey(), transformed);
-                } else {
-                    // Recursive transformation
-                    transformed = transformRecursive(entry.getValue(), entry.getKey());
-                    if (transformed != entry.getValue()) {
-                        objectNode.set(entry.getKey(), transformed);
-                    }
                 }
             }
         } else if (node.isArray()) {
@@ -117,12 +128,11 @@ public class JsonNodeDocumentMasker implements Masker<JsonNode, JsonNode> {
                 }
             }
         } else if (node.isTextual()) {
-            String original = node.asText();
-            String replacement;
+            final String original = node.asText();
             for (Masker<String, String> m : inlineMaskers) {
-                replacement = m.applyMasking(original);
-                if (!(Objects.equals(original, replacement))) {
-                    return new TextNode(replacement);
+                final String replacement = m.applyMasking(original);
+                if (!Objects.equals(original, replacement)) {
+                    return replacement == null ? NullNode.getInstance() : new TextNode(replacement);
                 }
             }
         }

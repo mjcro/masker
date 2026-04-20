@@ -5,12 +5,14 @@ import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 
 import java.util.Objects;
+import java.util.regex.Pattern;
 
 /**
  * Masks credit card number (PAN) leaving only 4 last digits.
  */
 public class StringCardPanMasker implements Masker<String, String> {
     public static final StringCardPanMasker DEFAULT = new StringCardPanMasker(StringSmartLengthMasker.DEFAULT);
+    private static final Pattern NON_DIGITS = Pattern.compile("[^0-9]");
 
     private final StringSmartLengthMasker masker;
 
@@ -24,7 +26,7 @@ public class StringCardPanMasker implements Masker<String, String> {
             return masker.applyMasking(value);
         }
 
-        value = value.replaceAll("[^0-9]", "").strip();
+        value = NON_DIGITS.matcher(value).replaceAll("").strip();
         if (value.length() < 12 || value.length() > 19) {
             return masker.applyMasking(value);
         }

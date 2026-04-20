@@ -5,12 +5,14 @@ import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 
 import java.util.Objects;
+import java.util.regex.Pattern;
 
 /**
  * Masks phone numbers leaving last two digits only.
  */
 public class PhoneNumberMasker implements Masker<String, String> {
     public static final PhoneNumberMasker DEFAULT = new PhoneNumberMasker(StringFullMasker.DEFAULT);
+    private static final Pattern NON_DIGITS = Pattern.compile("[^0-9]");
 
     private final StringFullMasker fallback;
 
@@ -24,7 +26,7 @@ public class PhoneNumberMasker implements Masker<String, String> {
             return fallback.applyMasking(value);
         }
 
-        value = value.replaceAll("[^0-9]", "").strip();
+        value = NON_DIGITS.matcher(value).replaceAll("").strip();
         return value.length() < 7
                 ? fallback.applyMasking(value)
                 : fallback.getMask() + value.substring(value.length() - 2);

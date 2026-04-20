@@ -13,6 +13,7 @@ import java.util.regex.Pattern;
 public class StringIbanMasker implements Masker<String, String> {
     public static final StringIbanMasker DEFAULT = new StringIbanMasker(StringSmartLengthMasker.DEFAULT);
     private static final Pattern inlinePattern = Pattern.compile("\\b[A-Z]{2}[0-9]{2}[A-Z0-9]{11,30}\\b");
+    private static final Pattern SEPARATORS = Pattern.compile("[ -]");
 
     private final StringSmartLengthMasker masker;
 
@@ -30,7 +31,7 @@ public class StringIbanMasker implements Masker<String, String> {
             return masker.applyMasking(value);
         }
 
-        String s = value.replaceAll("[ -]", "").strip();
+        final String s = SEPARATORS.matcher(value).replaceAll("").strip();
         if (s.isBlank() || s.length() < 11 || s.length() > 40) {
             return masker.applyMasking(s);
         }

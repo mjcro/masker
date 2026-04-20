@@ -36,15 +36,24 @@ public class StringInlinePatternMasker implements Masker<String, String> {
             return value;
         }
 
-        Matcher matcher = pattern.matcher(value);
-        StringBuilder sb = new StringBuilder(value.length());
-        while (matcher.find()) {
-            String match = matcher.group(0);
-            String replacement = masker.applyMasking(match);
-            matcher.appendReplacement(sb, replacement == null ? match : replacement);
+        final Matcher matcher = pattern.matcher(value);
+        if (!matcher.find()) {
+            return value;
         }
+
+        boolean changed = false;
+        final StringBuilder sb = new StringBuilder(value.length());
+        do {
+            final String match = matcher.group(0);
+            final String raw = masker.applyMasking(match);
+            final String replacement = raw == null ? match : raw;
+            if (!replacement.equals(match)) {
+                changed = true;
+            }
+            matcher.appendReplacement(sb, Matcher.quoteReplacement(replacement));
+        } while (matcher.find());
         matcher.appendTail(sb);
 
-        return sb.toString();
+        return changed ? sb.toString() : value;
     }
 }
