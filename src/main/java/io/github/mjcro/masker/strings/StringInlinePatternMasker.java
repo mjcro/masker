@@ -9,12 +9,23 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * Replaces inline values matched by Regex within string.
+ * Finds every regex occurrence inside the input string and passes the matched substring
+ * through the wrapped masker. The returned string keeps the non-matching parts untouched.
+ * When no match is found, or no replacement differs from the original match, the original
+ * reference is returned so downstream reference-equality checks can short-circuit.
+ * {@code null} and blank inputs pass through unchanged.
  */
 public class StringInlinePatternMasker implements Masker<String, String> {
     private final Pattern pattern;
     private final Masker<String, String> masker;
 
+    /**
+     * Convenience factory compiling the regex on the fly.
+     *
+     * @param regex  Non-null regex pattern string.
+     * @param masker Non-null masker invoked on every match.
+     * @return New inline masker instance.
+     */
     public static StringInlinePatternMasker compile(
             @NonNull String regex,
             @NonNull Masker<String, String> masker
@@ -22,6 +33,12 @@ public class StringInlinePatternMasker implements Masker<String, String> {
         return new StringInlinePatternMasker(Pattern.compile(regex), masker);
     }
 
+    /**
+     * Constructs new inline masker.
+     *
+     * @param pattern Non-null compiled pattern.
+     * @param masker  Non-null masker invoked on every match.
+     */
     public StringInlinePatternMasker(
             @NonNull Pattern pattern,
             @NonNull Masker<String, String> masker

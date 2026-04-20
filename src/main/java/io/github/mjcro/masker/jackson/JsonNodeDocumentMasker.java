@@ -19,13 +19,30 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-/** Masks a Jackson {@link JsonNode} tree in place; callers who need the original must pass a deep copy. */
+/**
+ * Masks a Jackson {@link JsonNode} tree in place.
+ * The walker applies field-name maskers to every object field (both exact name and
+ * {@code parent.child} compound name are tried) and inline maskers to every textual leaf.
+ * Arrays of primitives inherit their parent field name so that e.g. {@code {"emails": ["a@b"]}}
+ * is masked as if each element were named {@code emails}.
+ * <p>
+ * Not thread-safe for concurrent masking of the same node tree.
+ * Callers who must keep the original document must pass a deep copy, since the node is mutated.
+ */
 public class JsonNodeDocumentMasker implements Masker<JsonNode, JsonNode> {
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
     private final List<Masker<Map.Entry<String, JsonNode>, JsonNode>> fieldMaskers;
     private final List<Masker<String, String>> inlineMaskers;
 
+    /**
+     * Assembles a document masker from the given rulebook.
+     * Name-equals and name-contains maskers become field-level maskers, inline maskers
+     * are forwarded as-is.
+     *
+     * @param rulebook Non-null rulebook describing which fields to mask and how.
+     * @return Ready-to-use document masker.
+     */
     public static JsonNodeDocumentMasker usingRulebook(@NonNull Rulebook rulebook) {
         ArrayList<Masker<Map.Entry<String, JsonNode>, JsonNode>> fieldMaskers = new ArrayList<>();
         for (Map.Entry<String[], Masker<String, String>> e : rulebook.getNameEqualsMaskers()) {
@@ -47,6 +64,12 @@ public class JsonNodeDocumentMasker implements Masker<JsonNode, JsonNode> {
         return new JsonNodeDocumentMasker(fieldMaskers, rulebook.getInlineMaskers());
     }
 
+    /**
+     * Constructs new document masker.
+     *
+     * @param fieldMaskers  Non-null list of maskers accepting (name, node) entries.
+     * @param inlineMaskers Non-null list of maskers applied to every textual leaf.
+     */
     public JsonNodeDocumentMasker(
             @NonNull List<Masker<Map.Entry<String, JsonNode>, JsonNode>> fieldMaskers,
             @NonNull List<Masker<String, String>> inlineMaskers
@@ -55,16 +78,36 @@ public class JsonNodeDocumentMasker implements Masker<JsonNode, JsonNode> {
         this.inlineMaskers = Objects.requireNonNull(inlineMaskers, "inlineMaskers");
     }
 
-    /** Mutates {@code data} in place; the returned node is the same reference when non-null. */
+    /**
+     * Mutates the input node tree in place. Returns the same reference for non-null input.
+     *
+     * @param data Nullable root node.
+     * @return Same {@code data} reference when non-null, {@code null} otherwise.
+     * @throws Exception Propagated from underlying maskers.
+     */
     @Override
     public @Nullable JsonNode applyMasking(@Nullable JsonNode data) throws Exception {
         return transformRecursive(data, null);
     }
 
+    /**
+     * Parses the given JSON string, masks it and serializes the result back.
+     *
+     * @param json Non-null, valid JSON string.
+     * @return Non-null JSON string with sensitive fields masked.
+     * @throws Exception When the input cannot be parsed or a masker fails.
+     */
     public @NonNull String maskJsonString(@NonNull String json) throws Exception {
         return applyMasking(OBJECT_MAPPER.readTree(json)).toString();
     }
 
+    /**
+     * Same as {@link #maskJsonString(String)} but returns pretty-printed output.
+     *
+     * @param json Non-null, valid JSON string.
+     * @return Non-null pretty-printed masked JSON.
+     * @throws Exception When the input cannot be parsed or a masker fails.
+     */
     public @NonNull String maskJsonPrettyString(@NonNull String json) throws Exception {
         return applyMasking(OBJECT_MAPPER.readTree(json)).toPrettyString();
     }

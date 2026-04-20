@@ -8,7 +8,9 @@ import java.util.Objects;
 import java.util.regex.Pattern;
 
 /**
- * Masks phone numbers leaving last two digits only.
+ * Masks a phone number keeping only the last two digits, prefixed with the fallback mask token.
+ * Non-digit characters are stripped before processing. Inputs shorter than 7 digits,
+ * blanks and {@code null} are delegated to the fallback masker.
  */
 public class PhoneNumberMasker implements Masker<String, String> {
     public static final PhoneNumberMasker DEFAULT = new PhoneNumberMasker(StringFullMasker.DEFAULT);
@@ -16,6 +18,11 @@ public class PhoneNumberMasker implements Masker<String, String> {
 
     private final StringFullMasker fallback;
 
+    /**
+     * Constructs new phone masker.
+     *
+     * @param fallback Non-null fallback masker used for short inputs and for the mask token.
+     */
     public PhoneNumberMasker(@NonNull StringFullMasker fallback) {
         this.fallback = Objects.requireNonNull(fallback, "fallback");
     }

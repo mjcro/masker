@@ -24,6 +24,16 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
+/**
+ * Streaming XML masker built on top of StAX event API.
+ * Reads the input string as a sequence of XML events, applies field-name maskers to both
+ * element character data and attribute values, and re-serializes the stream.
+ * Attribute names are tried twice: first as {@code attrName}, then as {@code elementName_attrName}.
+ * Comments and processing instructions are passed through unchanged.
+ * <p>
+ * Uses a hardened {@link XMLInputFactory} with DTD and external entity support disabled.
+ * Not thread-safe when different inputs are masked in parallel.
+ */
 public class XmlStringStaxMasker implements Masker<String, String> {
     private static final XMLInputFactory INPUT_FACTORY = createHardenedInputFactory();
     private static final XMLOutputFactory OUTPUT_FACTORY = XMLOutputFactory.newInstance();
@@ -40,6 +50,12 @@ public class XmlStringStaxMasker implements Masker<String, String> {
         return factory;
     }
 
+    /**
+     * Assembles an XML masker from the given rulebook.
+     *
+     * @param rulebook Non-null rulebook supplying charset, name maskers and inline maskers.
+     * @return Ready-to-use XML masker.
+     */
     public static XmlStringStaxMasker usingRulebook(@NonNull Rulebook rulebook) {
         final ArrayList<Masker<Map.Entry<String, String>, String>> fieldMaskers = new ArrayList<>();
         for (Map.Entry<String[], Masker<String, String>> e : rulebook.getNameEqualsMaskers()) {
@@ -65,6 +81,13 @@ public class XmlStringStaxMasker implements Masker<String, String> {
         );
     }
 
+    /**
+     * Constructs new XML masker.
+     *
+     * @param charset       Non-null charset used to decode/encode the XML payload.
+     * @param fieldMaskers  Non-null maskers triggered by element or attribute name.
+     * @param inlineMaskers Non-null maskers tried on element character data when no field masker matched.
+     */
     public XmlStringStaxMasker(
             @NonNull Charset charset,
             @NonNull List<Masker<Map.Entry<String, String>, String>> fieldMaskers,

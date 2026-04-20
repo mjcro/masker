@@ -10,7 +10,10 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Default rulebook settings to mask HTTP headers.
+ * Opinionated rulebook targeting HTTP headers: {@code Authorization}, {@code Proxy-Authorization},
+ * {@code Cookie}/{@code Set-Cookie}, {@code Referer}, various {@code X-*-Token}/{@code X-Api-Key} variants
+ * and consent tokens. A 64-character truncation masker is installed as default for any other header.
+ * Name matches are case-insensitive exact match.
  */
 public class DefaultHttpHeadersRulebook extends SimpleRulebook {
     public static final List<Map.Entry<String[], Masker<String, String>>> NAME_EQ_MASKERS = List.of(
@@ -24,6 +27,9 @@ public class DefaultHttpHeadersRulebook extends SimpleRulebook {
             )
     );
 
+    /**
+     * Constructs rulebook using UTF-8 charset and a 64-character truncation default masker.
+     */
     public DefaultHttpHeadersRulebook() {
         super(
                 null,

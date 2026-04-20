@@ -9,9 +9,21 @@ import org.jspecify.annotations.Nullable;
 
 import java.util.Objects;
 
+/**
+ * Adapter that applies a {@code String} masker to the textual content of a Jackson
+ * {@link JsonNode}. Non-textual nodes are returned untouched.
+ * The original node is returned by reference when the underlying masker leaves the text unchanged,
+ * which is required by the reference-equality short-circuit used in {@link JsonNodeDocumentMasker}.
+ * A {@code null} result from the masker is converted into {@link NullNode}.
+ */
 public class JsonNodeTextualMaskerDecorator implements Masker<JsonNode, JsonNode> {
     private final Masker<String, String> masker;
 
+    /**
+     * Constructs new decorator.
+     *
+     * @param masker Non-null string masker to apply to the node text.
+     */
     public JsonNodeTextualMaskerDecorator(@NonNull Masker<String, String> masker) {
         this.masker = Objects.requireNonNull(masker, "masker");
     }

@@ -6,12 +6,24 @@ import org.jspecify.annotations.Nullable;
 import java.util.Objects;
 
 /**
- * Simple decorator of any other masker that replaces {@link Exception}
- * with {@link RuntimeException} allowing to use maskers in things like lambdas.
+ * Decorator that rewraps any checked {@link Exception} thrown by the underlying masker
+ * into an unchecked {@link RuntimeException}, allowing the masker to be used in lambdas,
+ * streams and other APIs that do not tolerate checked exceptions.
+ *
+ * @param <T> Type the wrapped masker accepts.
+ * @param <R> Type the wrapped masker returns.
  */
 public class SneakyThrowsMaskerDecorator<T, R> implements Masker<T, R> {
     private final Masker<T, R> masker;
 
+    /**
+     * Wraps the given masker. Returns the input untouched when it is already a {@code SneakyThrowsMaskerDecorator}.
+     *
+     * @param masker Non-null masker to wrap.
+     * @param <T>    Type the masker accepts.
+     * @param <R>    Type the masker returns.
+     * @return Decorated masker that never throws checked exceptions.
+     */
     public static <T, R> SneakyThrowsMaskerDecorator<T, R> of(@NonNull Masker<T, R> masker) {
         if (masker instanceof SneakyThrowsMaskerDecorator) {
             return (SneakyThrowsMaskerDecorator<T, R>) masker;

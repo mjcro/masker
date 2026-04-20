@@ -4,13 +4,21 @@ import io.github.mjcro.masker.Masker;
 import org.jspecify.annotations.Nullable;
 
 /**
- * Truncates long strings with length exceeding threshold, leaving prefix,
- * suffix and adding information about skipped characters
+ * Shortens strings longer than a configurable threshold by keeping a prefix and a short
+ * suffix with a {@code [...N...]} marker describing the number of skipped characters.
+ * Inputs at or below the threshold and {@code null} are returned unchanged.
+ * Intended as a log-size guard rather than a privacy masker.
  */
 public class StringLongTruncationMasker implements Masker<String, String> {
     public static final StringLongTruncationMasker DEFAULT = new StringLongTruncationMasker(256);
     private final int threshold;
 
+    /**
+     * Constructs new truncation masker.
+     *
+     * @param threshold Maximum length of the returned string. Must be at least 32.
+     * @throws IllegalArgumentException When {@code threshold &lt; 32}.
+     */
     public StringLongTruncationMasker(int threshold) {
         if (threshold < 32) {
             throw new IllegalArgumentException("Threshold should be at least 32 chars");

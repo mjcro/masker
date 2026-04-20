@@ -13,10 +13,25 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+/**
+ * Masker for HTTP header maps of shape {@code Map<String, List<String>>}.
+ * Looks up a per-name masker using the lowercased header name; when no rule matches
+ * and a default masker is configured, the default is used.
+ * Preserves insertion order of the input map and returns a new {@link LinkedHashMap}.
+ * {@code null} or empty inputs are passed through unchanged.
+ */
 public class HeadersPerNameMasker implements Masker<Map<String, List<String>>, Map<String, List<String>>> {
     private final Map<String, Masker<? super String, ? extends String>> rules;
     private final Masker<? super String, ? extends String> defaultMasker;
 
+    /**
+     * Assembles a header masker from the given rulebook.
+     * Only name-equals maskers and the default masker are consumed; other rulebook
+     * categories are ignored.
+     *
+     * @param rulebook Non-null rulebook.
+     * @return Ready-to-use header masker.
+     */
     public static HeadersPerNameMasker usingRulebook(@NonNull Rulebook rulebook) {
         HashMap<String, Masker<? super String, ? extends String>> nameRules = new HashMap<>();
         for (Map.Entry<String[], Masker<String, String>> e : rulebook.getNameEqualsMaskers()) {
@@ -27,6 +42,12 @@ public class HeadersPerNameMasker implements Masker<Map<String, List<String>>, M
         return new HeadersPerNameMasker(nameRules, rulebook.getDefaultMasker());
     }
 
+    /**
+     * Constructs new header masker.
+     *
+     * @param rules         Non-null map from header name to masker. Names are lowercased internally.
+     * @param defaultMasker Optional fallback masker applied when the name has no dedicated rule.
+     */
     public HeadersPerNameMasker(
             @NonNull Map<String, Masker<? super String, ? extends String>> rules,
             @Nullable Masker<? super String, ? extends String> defaultMasker

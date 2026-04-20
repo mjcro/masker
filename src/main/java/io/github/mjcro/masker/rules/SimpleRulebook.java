@@ -10,6 +10,11 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Plain immutable implementation of {@link Rulebook} backed by constructor arguments.
+ * Useful when building custom rulebooks without subclassing.
+ * Missing (null) arguments fall back to UTF-8 charset, no default masker, and empty lists.
+ */
 public class SimpleRulebook implements Rulebook {
     private final @NonNull Charset charset;
     private final @Nullable Masker<String, String> defaultMasker;
@@ -17,6 +22,15 @@ public class SimpleRulebook implements Rulebook {
     private final @NonNull List<Map.Entry<String[], Masker<String, String>>> nameEqualsMaskers;
     private final @NonNull List<Map.Entry<String[], Masker<String, String>>> nameContainsMaskers;
 
+    /**
+     * Constructs new rulebook. Any {@code null} argument is replaced with a safe default.
+     *
+     * @param charset             Optional charset. Defaults to UTF-8 when {@code null}.
+     * @param defaultMasker       Optional fallback masker. May be {@code null}.
+     * @param inlineMaskers       Optional inline maskers list. Defaults to empty list when {@code null}.
+     * @param nameEqualsMaskers   Optional name-equals maskers list. Defaults to empty list when {@code null}.
+     * @param nameContainsMaskers Optional name-contains maskers list. Defaults to empty list when {@code null}.
+     */
     public SimpleRulebook(
             @Nullable Charset charset,
             @Nullable Masker<String, String> defaultMasker,

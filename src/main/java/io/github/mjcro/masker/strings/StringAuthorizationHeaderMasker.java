@@ -7,7 +7,11 @@ import org.jspecify.annotations.Nullable;
 import java.util.Objects;
 
 /**
- * Masker for HTTP authorization headers.
+ * Masks HTTP {@code Authorization} style header values.
+ * Preserves the scheme (everything up to the first space) and the first 3 characters
+ * of the credential, then appends the mask token — e.g. {@code Bearer abc***}.
+ * Inputs that do not look like a scheme-prefixed credential, blanks and {@code null}
+ * are delegated to the fallback masker.
  */
 public class StringAuthorizationHeaderMasker implements Masker<String, String> {
     public static final StringAuthorizationHeaderMasker DEFAULT = new StringAuthorizationHeaderMasker(
@@ -16,6 +20,11 @@ public class StringAuthorizationHeaderMasker implements Masker<String, String> {
 
     private final StringSmartLengthMasker masker;
 
+    /**
+     * Constructs new authorization header masker.
+     *
+     * @param masker Non-null fallback masker supplying the mask token and handling edge cases.
+     */
     public StringAuthorizationHeaderMasker(@NonNull StringSmartLengthMasker masker) {
         this.masker = Objects.requireNonNull(masker);
     }

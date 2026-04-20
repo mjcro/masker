@@ -14,7 +14,10 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Default rulebook setting to mask structured objects like JSON or XML.
+ * Opinionated rulebook targeting structured payloads (JSON, XML) with common PII field names:
+ * CVV/CVC/PIN, card PAN, IBAN, person name variants, government IDs, email, phone, credentials.
+ * Also includes inline maskers for 12–19 digit card-like tokens and a 64-char long-value truncation.
+ * Use this as a starting point and subclass or compose further when project-specific rules are required.
  */
 public class DefaultObjectFieldsRulebook extends SimpleRulebook {
     public static final List<Map.Entry<String[], Masker<String, String>>> NAME_EQ_MASKERS = List.of(
@@ -64,6 +67,9 @@ public class DefaultObjectFieldsRulebook extends SimpleRulebook {
             new StringLongTruncationMasker(64)
     );
 
+    /**
+     * Constructs rulebook using UTF-8 charset and no default masker.
+     */
     public DefaultObjectFieldsRulebook() {
         super(null, null, INLINE_MASKERS, NAME_EQ_MASKERS, NAME_CONTAINS_MASKERS);
     }

@@ -7,7 +7,10 @@ import org.jspecify.annotations.Nullable;
 import java.util.Objects;
 
 /**
- * Masker that hides request URI part of given URL.
+ * Masks the request URI portion of an HTTP/HTTPS URL while preserving scheme,
+ * host and the root slash — e.g. {@code https://example.com/***}.
+ * Inputs not starting with {@code http://} or {@code https://}, blanks and {@code null}
+ * are delegated to the fallback masker.
  */
 public class StringUrlRequestUriMasker implements Masker<String, String> {
     public static final StringUrlRequestUriMasker DEFAULT = new StringUrlRequestUriMasker(
@@ -16,6 +19,11 @@ public class StringUrlRequestUriMasker implements Masker<String, String> {
 
     private final StringSmartLengthMasker masker;
 
+    /**
+     * Constructs new URL masker.
+     *
+     * @param masker Non-null fallback masker supplying the mask token and edge-case handling.
+     */
     public StringUrlRequestUriMasker(@NonNull StringSmartLengthMasker masker) {
         this.masker = Objects.requireNonNull(masker, "masker");
     }

@@ -8,7 +8,10 @@ import java.util.Objects;
 import java.util.regex.Pattern;
 
 /**
- * Masks credit card number (PAN) leaving only 4 last digits.
+ * Masks a credit card number (PAN) keeping only the last four digits and prefixing them
+ * with the fallback masker's mask token (e.g. {@code ***1234}).
+ * All non-digit characters are stripped before length validation (12–19 digits).
+ * Values shorter/longer than that range, blanks and {@code null} are delegated to the fallback masker.
  */
 public class StringCardPanMasker implements Masker<String, String> {
     public static final StringCardPanMasker DEFAULT = new StringCardPanMasker(StringSmartLengthMasker.DEFAULT);
@@ -16,6 +19,11 @@ public class StringCardPanMasker implements Masker<String, String> {
 
     private final StringSmartLengthMasker masker;
 
+    /**
+     * Constructs new PAN masker.
+     *
+     * @param masker Non-null fallback masker used for non-PAN inputs and for the mask token.
+     */
     public StringCardPanMasker(@NonNull StringSmartLengthMasker masker) {
         this.masker = Objects.requireNonNull(masker, "masker");
     }

@@ -7,16 +7,33 @@ import org.jspecify.annotations.Nullable;
 import java.util.Objects;
 
 /**
- * Masks string, leaving short unchanged prefix and suffix for long strings.
+ * Masks a string preserving a few leading and/or trailing characters depending on length.
+ * Shape summary:
+ * <ul>
+ *   <li>length &lt; 4 or blank: delegated to full masker.</li>
+ *   <li>length &lt; 10: first char + mask token.</li>
+ *   <li>length &lt; 20: first char + mask token + last char.</li>
+ *   <li>length &lt; 40: first 2 chars + mask token + last char.</li>
+ *   <li>length ≥ 40: first 4 chars + mask token + last char.</li>
+ * </ul>
+ * {@code null} input stays {@code null}.
  */
 public class StringSmartLengthMasker implements Masker<String, String> {
     public static final StringSmartLengthMasker DEFAULT = new StringSmartLengthMasker(StringFullMasker.DEFAULT);
     private final StringFullMasker fullMasker;
 
+    /**
+     * Constructs new smart-length masker.
+     *
+     * @param fullMasker Non-null full masker supplying the mask token and the short-input fallback.
+     */
     public StringSmartLengthMasker(@NonNull StringFullMasker fullMasker) {
         this.fullMasker = Objects.requireNonNull(fullMasker);
     }
 
+    /**
+     * @return Non-null mask token used by this masker.
+     */
     public String getMask() {
         return fullMasker.getMask();
     }
