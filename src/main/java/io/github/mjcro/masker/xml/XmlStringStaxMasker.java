@@ -135,12 +135,12 @@ public class XmlStringStaxMasker implements Masker<String, String> {
                                     String replacement = getReplacement(attrLocalPartName, null, attrValue);
                                     if (!Objects.equals(attrValue, replacement)) {
                                         attributeChanged = true;
-                                        newAttributes.add(EVENT_FACTORY.createAttribute(attrLocalPartName, replacement));
+                                        newAttributes.add(EVENT_FACTORY.createAttribute(attr.getName(), replacement));
                                     } else {
                                         replacement = getReplacement(currentElement + "_" + attrLocalPartName, null, attrValue);
                                         if (!Objects.equals(attrValue, replacement)) {
                                             attributeChanged = true;
-                                            newAttributes.add(EVENT_FACTORY.createAttribute(attrLocalPartName, replacement));
+                                            newAttributes.add(EVENT_FACTORY.createAttribute(attr.getName(), replacement));
                                         } else {
                                             newAttributes.add(attr);
                                         }
@@ -157,6 +157,8 @@ public class XmlStringStaxMasker implements Masker<String, String> {
                                 writer.add(event);
                                 break;
                             case XMLStreamConstants.CHARACTERS:
+                            case XMLStreamConstants.CDATA:
+                                final boolean isCdata = event.getEventType() == XMLStreamConstants.CDATA;
                                 final String content = event.asCharacters().getData();
                                 final int depth = elementStack.size();
                                 final String leafKey = depth > 0 ? elementStack.get(depth - 1) : null;
@@ -169,7 +171,9 @@ public class XmlStringStaxMasker implements Masker<String, String> {
                                     if (Objects.equals(content, replacement)) {
                                         writer.add(event);
                                     } else {
-                                        writer.add(EVENT_FACTORY.createCharacters(replacement));
+                                        writer.add(isCdata
+                                                ? EVENT_FACTORY.createCData(replacement)
+                                                : EVENT_FACTORY.createCharacters(replacement));
                                     }
                                 }
                                 break;
