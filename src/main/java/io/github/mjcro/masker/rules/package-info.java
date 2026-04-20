@@ -20,22 +20,29 @@
  * <p>Document-level maskers document which categories they honour; rulebook
  * implementations are allowed to expose only a subset.
  *
+ * <h2>Building custom rules</h2>
+ *
+ * <p>The recommended entry point is {@link io.github.mjcro.masker.rules.Rulebook#builder()}.
+ * The builder exposes granular withers for individual name-equals / name-contains /
+ * inline rules, plus coarse bundle withers ({@code withMaskedCardData}, {@code withMaskedIdentity},
+ * {@code withMaskedContacts}, {@code withMaskedCredentials}, {@code withMaskedHeaderCredentials},
+ * {@code withMaskedIban}, {@code withLongValueTruncation}) that install opinionated rule
+ * clusters for common data families. Bundles are additive and may be combined
+ * freely with each other and with the low-level withers.
+ *
  * <h2>Shipped implementations</h2>
  * <ul>
  *   <li>{@link io.github.mjcro.masker.rules.SimpleRulebook} — immutable
- *       container for custom rules; no subclassing required.</li>
+ *       container for custom rules; produced by the builder.</li>
+ *   <li>{@link io.github.mjcro.masker.rules.RulebookBuilder} — fluent builder.</li>
  *   <li>{@link io.github.mjcro.masker.rules.DefaultObjectFieldsRulebook} —
- *       opinionated defaults for JSON/XML payloads (card, IBAN, email, phone,
- *       names, credentials, ...).</li>
+ *       <em>deprecated</em> preset for JSON/XML payloads; prefer
+ *       {@code Rulebook.builder().withMaskedCardData().withMaskedIdentity().withMaskedContacts()
+ *       .withMaskedCredentials().withMaskedIban().withLongValueTruncation().build()}.</li>
  *   <li>{@link io.github.mjcro.masker.rules.DefaultHttpHeadersRulebook} —
- *       opinionated defaults for HTTP headers ({@code Authorization},
- *       {@code Cookie}, {@code X-Api-Key}, ...).</li>
+ *       <em>deprecated</em> preset for HTTP headers; prefer
+ *       {@code Rulebook.builder().withMaskedHeaderCredentials()
+ *       .withDefaultMasker(new StringLongTruncationMasker(64)).build()}.</li>
  * </ul>
- *
- * <h2>Building custom rules</h2>
- *
- * <p>Use {@link io.github.mjcro.masker.rules.Rulebook#tuple(io.github.mjcro.masker.Masker, String...)}
- * to pair a masker with the names (or substrings) that should trigger it, then
- * pass the list to {@code SimpleRulebook}.
  */
 package io.github.mjcro.masker.rules;

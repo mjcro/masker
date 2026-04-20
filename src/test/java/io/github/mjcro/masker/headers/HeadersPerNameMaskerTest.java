@@ -1,8 +1,9 @@
 package io.github.mjcro.masker.headers;
 
 import io.github.mjcro.masker.rules.DefaultHttpHeadersRulebook;
+import io.github.mjcro.masker.rules.Rulebook;
+import io.github.mjcro.masker.strings.StringLongTruncationMasker;
 import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -13,14 +14,28 @@ import java.util.Map;
 import java.util.stream.Stream;
 
 public class HeadersPerNameMaskerTest {
-    private static final HeadersPerNameMasker MASKER =
-            HeadersPerNameMasker.usingRulebook(new DefaultHttpHeadersRulebook());
+    /**
+     * Both the deprecated default rulebook and its builder-composed equivalent
+     * must produce identical header masking output on every case in this class.
+     */
+    @SuppressWarnings("deprecation")
+    static Stream<HeadersPerNameMasker> maskers() {
+        Rulebook deprecated = new DefaultHttpHeadersRulebook();
+        Rulebook builderBased = Rulebook.builder()
+                .withMaskedHeaderCredentials()
+                .withDefaultMasker(new StringLongTruncationMasker(64))
+                .build();
+        return Stream.of(
+                HeadersPerNameMasker.usingRulebook(deprecated),
+                HeadersPerNameMasker.usingRulebook(builderBased)
+        );
+    }
 
     private static Stream<Arguments> headerMaskingCases() {
         String longValue = "a".repeat(70);
         String longExpected = "a".repeat(52) + "[...20...]" + "aa";
 
-        return Stream.of(
+        List<Arguments> cases = List.of(
                 // StringAuthorizationHeaderMasker
                 Arguments.of("Authorization", "BASIC 234y2306298734692834", "BASIC 234***"),
                 Arguments.of("Authorization", "BEARER dSifohbsd0f89sd8f76", "BEARER dSi***"),
@@ -44,19 +59,24 @@ public class HeadersPerNameMaskerTest {
                 // Default masker: StringLongTruncationMasker(64) truncates over-threshold values
                 Arguments.of("X-Long-Header", longValue, longExpected)
         );
+
+        return maskers().flatMap(m -> cases.stream().map(args -> {
+            Object[] original = args.get();
+            return Arguments.of(m, original[0], original[1], original[2]);
+        }));
     }
 
-    @ParameterizedTest(name = "{0}: {1} -> {2}")
+    @ParameterizedTest(name = "{1}: {2} -> {3}")
     @MethodSource("headerMaskingCases")
-    void testHeaderMasking(String name, String input, String expected) throws Exception {
+    void testHeaderMasking(HeadersPerNameMasker masker, String name, String input, String expected) throws Exception {
         Assertions.assertEquals(
                 Map.of(name, List.of(expected)),
-                MASKER.applyMasking(Map.of(name, List.of(input)))
+                masker.applyMasking(Map.of(name, List.of(input)))
         );
     }
 
     private static Stream<Arguments> headersLeftIntactCases() {
-        return Stream.of(
+        List<Arguments> cases = List.of(
                 Arguments.of("Content-Type", "application/json"),
                 Arguments.of("Accept", "*/*"),
                 Arguments.of("Accept-Encoding", "gzip, deflate, br"),
@@ -71,18 +91,24 @@ public class HeadersPerNameMaskerTest {
                 Arguments.of("X-Request-Id", "req-abc-123"),
                 Arguments.of("X-Forwarded-For", "203.0.113.1")
         );
+
+        return maskers().flatMap(m -> cases.stream().map(args -> {
+            Object[] original = args.get();
+            return Arguments.of(m, original[0], original[1]);
+        }));
     }
 
-    @ParameterizedTest(name = "{0}: {1} (unchanged)")
+    @ParameterizedTest(name = "{1}: {2} (unchanged)")
     @MethodSource("headersLeftIntactCases")
-    void testHeadersLeftIntact(String name, String value) throws Exception {
+    void testHeadersLeftIntact(HeadersPerNameMasker masker, String name, String value) throws Exception {
         Map<String, List<String>> given = Map.of(name, List.of(value));
-        Assertions.assertEquals(given, MASKER.applyMasking(given));
+        Assertions.assertEquals(given, masker.applyMasking(given));
     }
 
-    @Test
-    void testNullAndEmptyInput() throws Exception {
-        Assertions.assertNull(MASKER.applyMasking(null));
-        Assertions.assertEquals(Collections.emptyMap(), MASKER.applyMasking(Collections.emptyMap()));
+    @ParameterizedTest
+    @MethodSource("maskers")
+    void testNullAndEmptyInput(HeadersPerNameMasker masker) throws Exception {
+        Assertions.assertNull(masker.applyMasking(null));
+        Assertions.assertEquals(Collections.emptyMap(), masker.applyMasking(Collections.emptyMap()));
     }
 }

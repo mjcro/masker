@@ -39,6 +39,17 @@ import java.util.Map;
  */
 public interface Rulebook {
     /**
+     * Creates a fresh {@link RulebookBuilder} for fluent composition of a
+     * {@link SimpleRulebook}. See the builder's own javadoc for the available
+     * low-level and bundle withers.
+     *
+     * @return new builder instance.
+     */
+    static RulebookBuilder builder() {
+        return new RulebookBuilder();
+    }
+
+    /**
      * Builds a {@code (names, masker)} tuple suitable for
      * {@link #getNameEqualsMaskers()} and {@link #getNameContainsMaskers()}.
      *

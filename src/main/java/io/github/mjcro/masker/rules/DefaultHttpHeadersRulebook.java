@@ -14,7 +14,19 @@ import java.util.Map;
  * {@code Cookie}/{@code Set-Cookie}, {@code Referer}, various {@code X-*-Token}/{@code X-Api-Key} variants
  * and consent tokens. A 64-character truncation masker is installed as default for any other header.
  * Name matches are case-insensitive exact match.
+ *
+ * @deprecated Prefer composing the equivalent configuration with {@link Rulebook#builder()},
+ * which lets callers pick the subset of rules they actually need. The full
+ * content of this rulebook is reproduced by:
+ * <pre>{@code
+ * Rulebook.builder()
+ *     .withMaskedHeaderCredentials()
+ *     .withDefaultMasker(new StringLongTruncationMasker(64))
+ *     .build();
+ * }</pre>
+ * This class will be removed in a future release.
  */
+@Deprecated
 public class DefaultHttpHeadersRulebook extends SimpleRulebook {
     public static final List<Map.Entry<String[], Masker<String, String>>> NAME_EQ_MASKERS = List.of(
             Rulebook.tuple(StringAuthorizationHeaderMasker.DEFAULT, "authorization"),

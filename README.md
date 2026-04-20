@@ -39,10 +39,17 @@ Woodstox is recommended for large payloads).
 
 ```java
 import io.github.mjcro.masker.jackson.JsonNodeDocumentMasker;
-import io.github.mjcro.masker.rules.DefaultObjectFieldsRulebook;
+import io.github.mjcro.masker.rules.Rulebook;
 
 JsonNodeDocumentMasker masker = JsonNodeDocumentMasker.usingRulebook(
-    new DefaultObjectFieldsRulebook()
+    Rulebook.builder()
+        .withMaskedCardData()
+        .withMaskedIdentity()
+        .withMaskedContacts()
+        .withMaskedCredentials()
+        .withMaskedIban()
+        .withLongValueTruncation()
+        .build()
 );
 
 String masked = masker.maskJsonString(
@@ -55,10 +62,13 @@ String masked = masker.maskJsonString(
 
 ```java
 import io.github.mjcro.masker.xml.XmlStringStaxMasker;
-import io.github.mjcro.masker.rules.DefaultObjectFieldsRulebook;
+import io.github.mjcro.masker.rules.Rulebook;
 
 XmlStringStaxMasker masker = XmlStringStaxMasker.usingRulebook(
-    new DefaultObjectFieldsRulebook()
+    Rulebook.builder()
+        .withMaskedCardData()
+        .withMaskedContacts()
+        .build()
 );
 String masked = masker.applyMasking("<user><email>alice@example.com</email></user>");
 ```
@@ -67,10 +77,14 @@ String masked = masker.applyMasking("<user><email>alice@example.com</email></use
 
 ```java
 import io.github.mjcro.masker.headers.HeadersPerNameMasker;
-import io.github.mjcro.masker.rules.DefaultHttpHeadersRulebook;
+import io.github.mjcro.masker.rules.Rulebook;
+import io.github.mjcro.masker.strings.StringLongTruncationMasker;
 
 HeadersPerNameMasker masker = HeadersPerNameMasker.usingRulebook(
-    new DefaultHttpHeadersRulebook()
+    Rulebook.builder()
+        .withMaskedHeaderCredentials()
+        .withDefaultMasker(new StringLongTruncationMasker(64))
+        .build()
 );
 Map<String, List<String>> masked = masker.applyMasking(request.getHeaders());
 ```
@@ -133,13 +147,67 @@ A `Rulebook` bundles four optional categories plus a charset:
 - `getDefaultMasker()` — fallback for anything else.
 
 A consumer is allowed to use only the subset it needs, so not every document masker
-reacts to every category. Shipped defaults:
+reacts to every category. Build rulebooks with `Rulebook.builder()`:
 
-- `DefaultObjectFieldsRulebook` — JSON/XML field names (`cvv`, `iban`, `card`,
-  `email`, `phone`, names, government IDs, ...).
-- `DefaultHttpHeadersRulebook` — HTTP headers (`authorization`, `cookie`,
-  `x-api-key`, `referer`, ...).
-- `SimpleRulebook` — plain container for custom rules, no subclassing required.
+- Granular withers — `withNameEqualsMasker`, `withNameContainsMasker`,
+  `withInlineMasker`, `withDefaultMasker`, `withCharset`.
+- **Bundle withers** install opinionated rule clusters with a single call:
+  - `withMaskedCardData()` — PAN, CVV/PIN family, track/EMV data, 3-D Secure
+    authentication values, network / wallet tokens, cardholder names, and an
+    inline 12–19-digit PAN detector.
+  - `withMaskedIdentity()` — person name variants, government IDs (SSN, passport,
+    driver licence, TIN/EIN/ITIN), building-level address components + `street` contains.
+  - `withMaskedContacts()` — `email` and `phone` (contains).
+  - `withMaskedCredentials()` — JSON-side credentials: contains `login` / `password`
+    / `key` / `token` / `consent` / `signature` / `secret`.
+  - `withMaskedHeaderCredentials()` — HTTP header credentials: exact-match on
+    `Authorization`, `Referer`, `Proxy-Authorization`, `Cookie`/`Set-Cookie`,
+    `WWW-Authenticate`, `X-*-Token`, `X-Api-Key`, consent-token variants.
+  - `withMaskedIban()` — `iban`, `bank_account`, `bankAccount`.
+  - `withLongValueTruncation(maxLength)` — appends a
+    `StringLongTruncationMasker` as an inline rule (64 chars by default).
+
+Shipped types:
+
+- `RulebookBuilder` — fluent builder returned by `Rulebook.builder()`.
+- `SimpleRulebook` — immutable container produced by `build()`.
+- `DefaultObjectFieldsRulebook` — **deprecated**; see [Default object-fields coverage](#default-object-fields-coverage) below. Equivalent to
+  `Rulebook.builder().withMaskedCardData().withMaskedIdentity().withMaskedContacts().withMaskedCredentials().withMaskedIban().withLongValueTruncation().build()`.
+- `DefaultHttpHeadersRulebook` — **deprecated**. Equivalent to
+  `Rulebook.builder().withMaskedHeaderCredentials().withDefaultMasker(new StringLongTruncationMasker(64)).build()`.
+
+#### Default object-fields coverage
+
+Calling `withMaskedCardData().withMaskedIdentity().withMaskedContacts().withMaskedCredentials().withMaskedIban().withLongValueTruncation()`
+on the builder installs an opinionated configuration aimed at request/response logging: fields
+that are prohibited to store (PCI-DSS SAD) or strongly re-identifying are erased entirely,
+whereas fields that are still useful for debugging (a last-4, a length-hint) are
+partially masked. Anything that is only dangerous *in combination with a masked PAN*
+(expiry, BIC, routing number, 3DS correlation IDs) is left visible.
+
+Fully masked (`***`):
+
+- **Card verification values** — `cvv`, `cvc`, `pin`, `cvv2`, `cvc2`, `cid`, `cav2`, `csc`.
+- **Magstripe / chip track data** — `track1`, `track2`, `trackData`, `magstripe`, `emvData`, `iccData` (+ `*_data` forms).
+- **3-D Secure authentication value** — `cavv`, `authenticationValue`.
+- **Network / wallet tokens (PAN-equivalent)** — `dpan`, `networkToken`, `applePayToken`, `googlePayToken` (+ `snake_case` forms).
+
+Partially masked (smart-length — keeps prefix/suffix so log lines stay debuggable):
+
+- **Cardholder name** — `cardholder`, `cardholder.name`, `cardholderName`, `nameOnCard` (+ `snake_case` forms).
+- **KYC document numbers** — `passportNumber`, `idCardNumber`, `driverLicense` / `driverLicence`, `documentNumber`, `nationalId` (+ `snake_case` forms).
+- **US tax identifiers** — `tin`, `ein`, `itin`.
+- **Building-level address components** — `addressLine1`, `addressLine2`, `houseNumber`, `apartment` (+ `snake_case` forms). City / state / postal code are intentionally left visible for AVS and fraud triage.
+
+Previously covered and unchanged: PAN (`card`, `pan`, `cardNumber`), IBAN / bank account,
+email, phone, person names under `payer|payee|sender|recipient|beneficiary`, `ssn` /
+`governmentIdNumber`, free-form `login` / `password` / `token` / `secret` / `key` /
+`signature` / `consent`. An inline 12–19-digit PAN detector and a 64-character
+truncation masker also run on every textual leaf.
+
+> **Note on `cid`:** in payment payloads this is an Amex card-verification field and
+> is erased. If your logs use `cid` as a generic correlation ID, omit `withMaskedCardData()`
+> and register the specific card-verification fields you need with `withNameEqualsMasker(...)`.
 
 ### Document-level maskers
 
@@ -153,23 +221,25 @@ reacts to every category. Shipped defaults:
 
 ```java
 import io.github.mjcro.masker.rules.Rulebook;
-import io.github.mjcro.masker.rules.SimpleRulebook;
 import io.github.mjcro.masker.strings.*;
-import java.util.List;
 
-Rulebook rb = new SimpleRulebook(
-    null, // UTF-8
-    StringLongTruncationMasker.DEFAULT, // default
-    List.of(StringIbanMasker.DEFAULT.asInlineMasker()), // inline
-    List.of(
-        Rulebook.tuple(StringFullMasker.DEFAULT, "cvv", "pin"),
-        Rulebook.tuple(StringCardPanMasker.DEFAULT, "card", "pan")
-    ),
-    List.of(
-        Rulebook.tuple(StringEmailMasker.DEFAULT, "email"),
-        Rulebook.tuple(PhoneNumberMasker.DEFAULT, "phone")
-    )
-);
+Rulebook rb = Rulebook.builder()
+    .withDefaultMasker(StringLongTruncationMasker.DEFAULT)
+    .withNameEqualsMasker(StringFullMasker.DEFAULT, "cvv", "pin")
+    .withNameEqualsMasker(StringCardPanMasker.DEFAULT, "card", "pan")
+    .withNameContainsMasker(StringEmailMasker.DEFAULT, "email")
+    .withNameContainsMasker(PhoneNumberMasker.DEFAULT, "phone")
+    .build();
+```
+
+Combine granular withers with bundle withers freely — they are additive:
+
+```java
+Rulebook rb = Rulebook.builder()
+    .withMaskedCardData()
+    .withMaskedContacts()
+    .withNameEqualsMasker(StringFullMasker.DEFAULT, "internalSecret")
+    .build();
 ```
 
 ## Conventions
