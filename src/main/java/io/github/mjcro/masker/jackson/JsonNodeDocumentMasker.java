@@ -53,7 +53,7 @@ public class JsonNodeDocumentMasker implements Masker<JsonNode, JsonNode> {
 
     @Override
     public @Nullable JsonNode applyMasking(@Nullable JsonNode data) throws Exception {
-        return transformRecursive(data);
+        return transformRecursive(data, null);
     }
 
     public @NonNull String maskJsonString(@NonNull String json) throws Exception {
@@ -64,7 +64,7 @@ public class JsonNodeDocumentMasker implements Masker<JsonNode, JsonNode> {
         return applyMasking(new ObjectMapper().readTree(json)).toPrettyString();
     }
 
-    private @Nullable JsonNode transformRecursive(@Nullable JsonNode node) throws Exception {
+    private @Nullable JsonNode transformRecursive(@Nullable JsonNode node, @Nullable String parentName) throws Exception {
         if (node == null) {
             return null;
         }
@@ -74,7 +74,7 @@ public class JsonNodeDocumentMasker implements Masker<JsonNode, JsonNode> {
             Iterator<Map.Entry<String, JsonNode>> fields = objectNode.fields();
             while (fields.hasNext()) {
                 Map.Entry<String, JsonNode> entry = fields.next();
-                JsonNode transformed = applyFieldMaskers(entry);
+                JsonNode transformed = applyFieldMaskers(entry, parentName);
                 if (transformed == entry.getValue()
                         && entry.getValue().isArray()
                         && !(entry.getValue().isEmpty())
@@ -89,7 +89,7 @@ public class JsonNodeDocumentMasker implements Masker<JsonNode, JsonNode> {
                                 entry.getKey(),
                                 innerItem
                         );
-                        JsonNode innerTransformed = applyFieldMaskers(synthEntry);
+                        JsonNode innerTransformed = applyFieldMaskers(synthEntry, parentName);
                         if (innerTransformed != innerItem) {
                             arrayNode.set(i, innerTransformed);
                         }
@@ -101,7 +101,7 @@ public class JsonNodeDocumentMasker implements Masker<JsonNode, JsonNode> {
                     objectNode.set(entry.getKey(), transformed);
                 } else {
                     // Recursive transformation
-                    transformed = transformRecursive(entry.getValue());
+                    transformed = transformRecursive(entry.getValue(), entry.getKey());
                     if (transformed != entry.getValue()) {
                         objectNode.set(entry.getKey(), transformed);
                     }
@@ -111,7 +111,7 @@ public class JsonNodeDocumentMasker implements Masker<JsonNode, JsonNode> {
             ArrayNode arrayNode = (ArrayNode) node;
             for (int i = 0; i < arrayNode.size(); i++) {
                 JsonNode item = arrayNode.get(i);
-                JsonNode transformed = transformRecursive(item);
+                JsonNode transformed = transformRecursive(item, parentName);
                 if (transformed != item) {
                     arrayNode.set(i, transformed);
                 }
@@ -130,12 +130,20 @@ public class JsonNodeDocumentMasker implements Masker<JsonNode, JsonNode> {
         return node;
     }
 
-    private JsonNode applyFieldMaskers(Map.Entry<String, JsonNode> entry) throws Exception {
-        JsonNode transformed;
+    private JsonNode applyFieldMaskers(Map.Entry<String, JsonNode> entry, @Nullable String parentName) throws Exception {
+        Map.Entry<String, JsonNode> compoundEntry = parentName == null
+                ? null
+                : new AbstractMap.SimpleEntry<>(parentName + "." + entry.getKey(), entry.getValue());
         for (Masker<Map.Entry<String, JsonNode>, JsonNode> m : fieldMaskers) {
-            transformed = m.applyMasking(entry);
+            JsonNode transformed = m.applyMasking(entry);
             if (transformed != entry.getValue()) {
                 return transformed;
+            }
+            if (compoundEntry != null) {
+                transformed = m.applyMasking(compoundEntry);
+                if (transformed != entry.getValue()) {
+                    return transformed;
+                }
             }
         }
         return entry.getValue();

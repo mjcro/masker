@@ -20,7 +20,9 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Deque;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -81,7 +83,7 @@ public class XmlStringStaxMasker implements Masker<String, String> {
             XMLEventWriter writer = outputFactory.createXMLEventWriter(baos);
             XMLEventFactory eventFactory = XMLEventFactory.newInstance();
 
-            String currentElement = "";
+            Deque<String> elementStack = new ArrayDeque<>();
 
             while (reader.hasNext()) {
                 XMLEvent event = reader.nextEvent();
@@ -89,7 +91,8 @@ public class XmlStringStaxMasker implements Masker<String, String> {
                 switch (event.getEventType()) {
                     case XMLStreamConstants.START_ELEMENT:
                         StartElement startElement = event.asStartElement();
-                        currentElement = startElement.getName().getLocalPart();
+                        String currentElement = startElement.getName().getLocalPart();
+                        elementStack.push(currentElement);
 
                         // Handling attributes
                         boolean attributeChanged = false;
@@ -101,19 +104,18 @@ public class XmlStringStaxMasker implements Masker<String, String> {
                             String attrValue = attr.getValue();
 
                             // Applying maskers on attr name
-                            String replacement = getReplacement(attrLocalPartName, attrValue);
+                            String replacement = getReplacement(attrLocalPartName, null, attrValue);
                             if (!Objects.equals(attrValue, replacement)) {
                                 attributeChanged = true;
                                 newAttributes.add(eventFactory.createAttribute(attrLocalPartName, replacement));
                             } else {
-                                replacement = getReplacement(currentElement + "_" + attrLocalPartName, attrValue);
+                                replacement = getReplacement(currentElement + "_" + attrLocalPartName, null, attrValue);
                                 if (!Objects.equals(attrValue, replacement)) {
                                     attributeChanged = true;
                                     newAttributes.add(eventFactory.createAttribute(attrLocalPartName, replacement));
                                 } else {
                                     newAttributes.add(attr);
                                 }
-                                newAttributes.add(eventFactory.createAttribute(attrLocalPartName, replacement));
                             }
                         }
                         if (attributeChanged) {
@@ -128,10 +130,17 @@ public class XmlStringStaxMasker implements Masker<String, String> {
                         break;
                     case XMLStreamConstants.CHARACTERS:
                         String content = event.asCharacters().getData();
-                        if (content == null || content.isBlank()) {
+                        String leafKey = elementStack.peek();
+                        if (content == null || content.isBlank() || leafKey == null) {
                             writer.add(event);
                         } else {
-                            String replacement = getReplacement(currentElement, content);
+                            String compoundKey = null;
+                            Iterator<String> it = elementStack.iterator();
+                            it.next();
+                            if (it.hasNext()) {
+                                compoundKey = it.next() + "." + leafKey;
+                            }
+                            String replacement = getReplacement(leafKey, compoundKey, content);
                             if (Objects.equals(content, replacement)) {
                                 writer.add(event);
                             } else {
@@ -140,7 +149,7 @@ public class XmlStringStaxMasker implements Masker<String, String> {
                         }
                         break;
                     case XMLStreamConstants.END_ELEMENT:
-                        currentElement = ""; // Reset context
+                        elementStack.pop();
                         writer.add(event);
                         break;
                     default:
@@ -158,14 +167,21 @@ public class XmlStringStaxMasker implements Masker<String, String> {
         }
     }
 
-    private String getReplacement(String key, String value) throws Exception {
+    private String getReplacement(String key, @Nullable String compoundKey, String value) throws Exception {
         // Applying field maskers
         String replacement;
         Map.Entry<String, String> entry = Map.entry(key, value);
+        Map.Entry<String, String> compoundEntry = compoundKey == null ? null : Map.entry(compoundKey, value);
         for (Masker<Map.Entry<String, String>, String> m : fieldMaskers) {
             replacement = m.applyMasking(entry);
             if (!Objects.equals(value, replacement)) {
                 return replacement;
+            }
+            if (compoundEntry != null) {
+                replacement = m.applyMasking(compoundEntry);
+                if (!Objects.equals(value, replacement)) {
+                    return replacement;
+                }
             }
         }
 

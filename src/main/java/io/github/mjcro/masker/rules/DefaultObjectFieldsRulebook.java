@@ -33,6 +33,7 @@ public class DefaultObjectFieldsRulebook extends SimpleRulebook {
             Rulebook.tuple(
                     StringSmartLengthMasker.DEFAULT,
                     "firstName", "first_name", "lastName", "last_name", "beneficiaryName",
+                    "payer.name", "payee.name", "sender.name", "recipient.name", "beneficiary.name",
                     "ssn", "socialSecurityNumber", "social_security_number",
                     "governmentIdNumber", "government_id_number"
             )

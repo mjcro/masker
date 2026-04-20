@@ -39,6 +39,16 @@ public class JsonNodeDocumentMaskerTest {
                 Arguments.of("{\"email\":\"theverylongemail@gmail.com\"}", "{\"email\":\"t***l@gmail.com\"}"),
                 Arguments.of("{\"pan\":\"1234561111119876\"}", "{\"pan\":\"***9876\"}"),
                 Arguments.of("{\"iban\":\"UA1234561111119876\"}", "{\"iban\":\"UA12***9876\"}"),
+                // Compound (parent.leaf) matching
+                Arguments.of("{\"payer\":{\"name\":\"Abraham Lincoln\"}}", "{\"payer\":{\"name\":\"A***n\"}}"),
+                Arguments.of("{\"payee\":{\"name\":\"Abraham Lincoln\"}}", "{\"payee\":{\"name\":\"A***n\"}}"),
+                Arguments.of("{\"sender\":{\"name\":\"Abraham Lincoln\"}}", "{\"sender\":{\"name\":\"A***n\"}}"),
+                Arguments.of("{\"recipient\":{\"name\":\"Abraham Lincoln\"}}", "{\"recipient\":{\"name\":\"A***n\"}}"),
+                Arguments.of("{\"beneficiary\":{\"name\":\"Abraham Lincoln\"}}", "{\"beneficiary\":{\"name\":\"A***n\"}}"),
+                Arguments.of("{\"PAYER\":{\"Name\":\"Abraham Lincoln\"}}", "{\"PAYER\":{\"Name\":\"A***n\"}}"),
+                // Bare "name" at root or under an unknown parent is not masked
+                Arguments.of("{\"name\":\"Abraham Lincoln\"}", "{\"name\":\"Abraham Lincoln\"}"),
+                Arguments.of("{\"other\":{\"name\":\"Abraham Lincoln\"}}", "{\"other\":{\"name\":\"Abraham Lincoln\"}}"),
                 // Inline
                 Arguments.of("\"1234561111119876\"", "\"***9876\"")
         );

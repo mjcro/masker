@@ -9,6 +9,9 @@
     "phone" : "***11",
     "email" : "j***@clarkson.may"
   },
+  "payer" : {
+    "name" : "A***n"
+  },
   "payment" : {
     "amount" : 19.99,
     "card_number" : "***3456",

@@ -12,7 +12,7 @@
 
         <transaction id="TXN-9902" type="WIRE_TRANSFER">
             <sender>
-                <name>Jane Doe</name>
+                <name>J***</name>
                 <ssn>1***9</ssn>
                 <contact>
                     <email>j***@example.com</email>
