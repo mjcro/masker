@@ -6,7 +6,7 @@
 
     <groupId>io.github.mjcro</groupId>
     <artifactId>masker</artifactId>
-    <version>0.0.3</version>
+    <version>0.0.4</version>
 
     <name>MicroJ Masker</name>
     <description>Tiny library to handle sensitive data masking</description>

@@ -17,7 +17,7 @@ Maven Central coordinates:
 <dependency>
     <groupId>io.github.mjcro</groupId>
     <artifactId>masker</artifactId>
-    <version>0.0.3</version>
+    <version>0.0.4</version>
 </dependency>
 ```
 
