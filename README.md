@@ -17,7 +17,7 @@ Maven Central coordinates:
 <dependency>
     <groupId>io.github.mjcro</groupId>
     <artifactId>masker</artifactId>
-    <version>0.0.5</version>
+    <version>0.1.0</version>
 </dependency>
 ```
 
@@ -34,6 +34,29 @@ For XML masking any JAXP-compatible StAX implementation will do (the JDK ships o
 Woodstox is recommended for large payloads).
 
 ## Quick start
+
+### Mask any body (auto-detect)
+
+```java
+import io.github.mjcro.masker.auto.AutoBodyMasker;
+import io.github.mjcro.masker.rules.Rulebook;
+
+AutoBodyMasker masker = AutoBodyMasker.usingRulebook(
+    Rulebook.builder()
+        .withMaskedCardData()
+        .withMaskedContacts()
+        .withMaskedCredentials()
+        .build()
+);
+
+masker.applyMasking("{\"card\":\"4111111111111111\"}");      // -> JSON  branch
+masker.applyMasking("<r><cvv>1234</cvv></r>");                // -> XML   branch
+masker.applyMasking("card=4111111111111111&note=hello");      // -> form-data branch
+```
+
+The first non-whitespace character of the input picks the route (`{`/`[` &rarr; JSON,
+`<` &rarr; XML, anything else &rarr; form-data). `null`, empty and all-whitespace
+inputs pass through unchanged.
 
 ### Mask a JSON string
 
@@ -72,6 +95,26 @@ XmlStringStaxMasker masker = XmlStringStaxMasker.usingRulebook(
 );
 String masked = masker.applyMasking("<user><email>alice@example.com</email></user>");
 ```
+
+### Mask a form-urlencoded body
+
+```java
+import io.github.mjcro.masker.formdata.FormDataStringMasker;
+import io.github.mjcro.masker.rules.Rulebook;
+
+FormDataStringMasker masker = FormDataStringMasker.usingRulebook(
+    Rulebook.builder()
+        .withMaskedCardData()
+        .withMaskedCredentials()
+        .build()
+);
+String masked = masker.applyMasking("card=4111111111111111&password=hunter2hunter2");
+// card=***1111&password=h***2
+```
+
+Pairs whose value is not rewritten are emitted verbatim from the source string, so
+the original encoding form is kept for untouched data. When nothing changes the
+exact same input reference is returned.
 
 ### Mask HTTP headers
 
@@ -207,11 +250,13 @@ truncation masker also run on every textual leaf.
 
 ### Document-level maskers
 
-| Class                              | Input                               | Notes                                                                                  |
-|------------------------------------|-------------------------------------|----------------------------------------------------------------------------------------|
-| `JsonNodeDocumentMasker`           | Jackson `JsonNode` or JSON string   | Walks the tree, mutates in place. Handles `parent.child` compound names and primitive arrays. |
-| `XmlStringStaxMasker`              | XML string                          | Streaming StAX rewriter with hardened DTD/external-entity settings. Masks element text and attributes. |
-| `HeadersPerNameMasker`             | `Map<String, List<String>>`         | Per-name lookup (case-insensitive) with a default-masker fallback.                     |
+| Class                    | Input                                      | Notes                                                                                                                          |
+|--------------------------|--------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------|
+| `JsonNodeDocumentMasker` | Jackson `JsonNode` or JSON string          | Walks the tree, mutates in place. Handles `parent.child` compound names and primitive arrays.                                  |
+| `XmlStringStaxMasker`    | XML string                                 | Streaming StAX rewriter with hardened DTD/external-entity settings. Masks element text and attributes.                         |
+| `FormDataStringMasker`   | `application/x-www-form-urlencoded` string | Splits on `&`, URL-decodes per pair, re-encodes only rewritten pairs; preserves duplicates, order and untouched encoding form. |
+| `HeadersPerNameMasker`   | `Map<String, List<String>>`                | Per-name lookup (case-insensitive) with a default-masker fallback.                                                             |
+| `AutoBodyMasker`         | Any HTTP body string                       | Dispatches to JSON / XML / form-data based on the first non-whitespace character.                                              |
 
 ## Custom rulebook example
 
