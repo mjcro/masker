@@ -171,10 +171,6 @@ Shipped types:
 
 - `RulebookBuilder` — fluent builder returned by `Rulebook.builder()`.
 - `SimpleRulebook` — immutable container produced by `build()`.
-- `DefaultObjectFieldsRulebook` — **deprecated**; see [Default object-fields coverage](#default-object-fields-coverage) below. Equivalent to
-  `Rulebook.builder().withMaskedCardData().withMaskedIdentity().withMaskedContacts().withMaskedCredentials().withMaskedIban().withLongValueTruncation().build()`.
-- `DefaultHttpHeadersRulebook` — **deprecated**. Equivalent to
-  `Rulebook.builder().withMaskedHeaderCredentials().withDefaultMasker(new StringLongTruncationMasker(64)).build()`.
 
 #### Default object-fields coverage
 

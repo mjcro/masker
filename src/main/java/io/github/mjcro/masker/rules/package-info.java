@@ -35,14 +35,6 @@
  *   <li>{@link io.github.mjcro.masker.rules.SimpleRulebook} — immutable
  *       container for custom rules; produced by the builder.</li>
  *   <li>{@link io.github.mjcro.masker.rules.RulebookBuilder} — fluent builder.</li>
- *   <li>{@link io.github.mjcro.masker.rules.DefaultObjectFieldsRulebook} —
- *       <em>deprecated</em> preset for JSON/XML payloads; prefer
- *       {@code Rulebook.builder().withMaskedCardData().withMaskedIdentity().withMaskedContacts()
- *       .withMaskedCredentials().withMaskedIban().withLongValueTruncation().build()}.</li>
- *   <li>{@link io.github.mjcro.masker.rules.DefaultHttpHeadersRulebook} —
- *       <em>deprecated</em> preset for HTTP headers; prefer
- *       {@code Rulebook.builder().withMaskedHeaderCredentials()
- *       .withDefaultMasker(new StringLongTruncationMasker(64)).build()}.</li>
  * </ul>
  */
 package io.github.mjcro.masker.rules;

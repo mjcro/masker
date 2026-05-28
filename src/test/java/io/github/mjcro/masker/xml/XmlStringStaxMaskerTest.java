@@ -1,8 +1,8 @@
 package io.github.mjcro.masker.xml;
 
-import io.github.mjcro.masker.rules.DefaultObjectFieldsRulebook;
 import io.github.mjcro.masker.rules.Rulebook;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -10,46 +10,34 @@ import org.junit.jupiter.params.provider.MethodSource;
 import javax.xml.stream.XMLOutputFactory;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.List;
 import java.util.stream.Stream;
 
 public class XmlStringStaxMaskerTest {
-    /**
-     * Both the deprecated default rulebook and its builder-composed equivalent
-     * must produce identical masking output on every fixture and case in this class.
-     */
-    @SuppressWarnings("deprecation")
-    static Stream<Rulebook> rulebooks() {
-        return Stream.of(
-                new DefaultObjectFieldsRulebook(),
-                Rulebook.builder()
-                        .withMaskedCardData()
-                        .withMaskedIdentity()
-                        .withMaskedContacts()
-                        .withMaskedCredentials()
-                        .withMaskedIban()
-                        .withLongValueTruncation()
-                        .build()
-        );
-    }
+    private static final Rulebook RULEBOOK = Rulebook.builder()
+            .withMaskedCardData()
+            .withMaskedIdentity()
+            .withMaskedContacts()
+            .withMaskedCredentials()
+            .withMaskedIban()
+            .withLongValueTruncation()
+            .build();
 
-    @ParameterizedTest
-    @MethodSource("rulebooks")
-    void testMasking(Rulebook rulebook) throws Exception {
+    @Test
+    void testMasking() throws Exception {
         String given = Files.readString(Path.of(getClass().getClassLoader().getResource("xml-given.xml").toURI()));
         String expected = Files.readString(Path.of(getClass().getClassLoader().getResource("xml-expected.xml").toURI()));
 
         System.out.println("Factory Class: " + XMLOutputFactory.newInstance().getClass().getName());
         Assertions.assertEquals(
                 expected,
-                XmlStringStaxMasker.usingRulebook(rulebook).applyMasking(given)
+                XmlStringStaxMasker.usingRulebook(RULEBOOK).applyMasking(given)
         );
     }
 
     private static final String DECL = "<?xml version='1.0' encoding='UTF-8'?>";
 
     static Stream<Arguments> dataProvider() {
-        List<Arguments> cases = List.of(
+        return Stream.of(
                 // Leaf element matching
                 Arguments.of("<r><cvv>1234</cvv></r>", DECL + "<r><cvv>***</cvv></r>"),
                 Arguments.of("<r><cvv2>1234</cvv2></r>", DECL + "<r><cvv2>***</cvv2></r>"),
@@ -79,19 +67,14 @@ public class XmlStringStaxMaskerTest {
                         DECL + "<r><payer><name>A***n</name><cvv>***</cvv></payer></r>"
                 )
         );
-
-        return rulebooks().flatMap(rb -> cases.stream().map(args -> {
-            Object[] original = args.get();
-            return Arguments.of(rb, original[0], original[1]);
-        }));
     }
 
     @ParameterizedTest
     @MethodSource("dataProvider")
-    void testMasking(final Rulebook rulebook, final String given, final String expected) throws Exception {
+    void testMasking(final String given, final String expected) throws Exception {
         Assertions.assertEquals(
                 expected,
-                XmlStringStaxMasker.usingRulebook(rulebook).applyMasking(given)
+                XmlStringStaxMasker.usingRulebook(RULEBOOK).applyMasking(given)
         );
     }
 }

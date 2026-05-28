@@ -1,51 +1,39 @@
 package io.github.mjcro.masker.jackson;
 
-import io.github.mjcro.masker.rules.DefaultObjectFieldsRulebook;
 import io.github.mjcro.masker.rules.Rulebook;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.List;
 import java.util.stream.Stream;
 
 public class JsonNodeDocumentMaskerTest {
-    /**
-     * Both the deprecated default rulebook and its builder-composed equivalent
-     * must produce identical masking output on every test fixture in this class.
-     */
-    @SuppressWarnings("deprecation")
-    static Stream<Rulebook> rulebooks() {
-        return Stream.of(
-                new DefaultObjectFieldsRulebook(),
-                Rulebook.builder()
-                        .withMaskedCardData()
-                        .withMaskedIdentity()
-                        .withMaskedContacts()
-                        .withMaskedCredentials()
-                        .withMaskedIban()
-                        .withLongValueTruncation()
-                        .build()
-        );
-    }
+    private static final Rulebook RULEBOOK = Rulebook.builder()
+            .withMaskedCardData()
+            .withMaskedIdentity()
+            .withMaskedContacts()
+            .withMaskedCredentials()
+            .withMaskedIban()
+            .withLongValueTruncation()
+            .build();
 
-    @ParameterizedTest
-    @MethodSource("rulebooks")
-    void testMasking(Rulebook rulebook) throws Exception {
+    @Test
+    void testMasking() throws Exception {
         String given = Files.readString(Path.of(getClass().getClassLoader().getResource("json-given.json").toURI()));
         String expected = Files.readString(Path.of(getClass().getClassLoader().getResource("json-expected.json").toURI()));
 
         Assertions.assertEquals(
                 expected,
-                JsonNodeDocumentMasker.usingRulebook(rulebook).maskJsonPrettyString(given)
+                JsonNodeDocumentMasker.usingRulebook(RULEBOOK).maskJsonPrettyString(given)
         );
     }
 
     static Stream<Arguments> dataProvider() {
-        List<Arguments> cases = List.of(
+        return Stream.of(
                 // Object keys
                 Arguments.of("{\"firstNAME\":\"Alexander\"}", "{\"firstNAME\":\"A***\"}"),
                 Arguments.of("{\"FIRST_name\":\"Alexander\"}", "{\"FIRST_name\":\"A***\"}"),
@@ -108,19 +96,14 @@ public class JsonNodeDocumentMaskerTest {
                 // Inline
                 Arguments.of("\"1234561111119876\"", "\"***9876\"")
         );
-
-        return rulebooks().flatMap(rb -> cases.stream().map(args -> {
-            Object[] original = args.get();
-            return Arguments.of(rb, original[0], original[1]);
-        }));
     }
 
     @ParameterizedTest
     @MethodSource("dataProvider")
-    public void testMasking(final Rulebook rulebook, final String given, final String expected) throws Exception {
+    public void testMasking(final String given, final String expected) throws Exception {
         Assertions.assertEquals(
                 expected,
-                JsonNodeDocumentMasker.usingRulebook(rulebook).maskJsonString(given)
+                JsonNodeDocumentMasker.usingRulebook(RULEBOOK).maskJsonString(given)
         );
     }
 }
